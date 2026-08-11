@@ -16,7 +16,8 @@ import {
   requestFCMNotificationPermission, 
   subscribeToFCMIncomingMessages, 
   subscribeFirestoreNotifications, 
-  markNotificationReadInFirestore 
+  markNotificationReadInFirestore,
+  formatFirebaseAuthError
 } from '../lib/firebase';
 
 export interface ToastMessage {
@@ -336,7 +337,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setAuthModalOpen(true);
     } catch (err: any) {
       console.error('Google OAuth error:', err);
-      addToast('Google Auth Error', err.message || 'Failed to authenticate with Google OAuth', 'error');
+      const readableErr = formatFirebaseAuthError(err);
+      addToast('Google Auth Error', readableErr, 'error');
     }
   };
 
@@ -357,8 +359,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setAuthModalOpen(true);
     } catch (err: any) {
       console.error('Firebase Email Registration Error:', err);
-      addToast('Registration Failed', err.message || 'Error creating Firebase user', 'error');
-      throw err;
+      const readableErr = formatFirebaseAuthError(err);
+      addToast('Registration Failed', readableErr, 'error');
+      throw new Error(readableErr);
     }
   };
 
@@ -367,8 +370,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await resendFirebaseEmailVerification();
       addToast('Verification Email Sent ✉️', 'A new verification link was sent to your email address.', 'info');
     } catch (err: any) {
-      addToast('Resend Failed', err.message || 'Unable to resend verification email.', 'error');
-      throw err;
+      const readableErr = formatFirebaseAuthError(err);
+      addToast('Resend Failed', readableErr, 'error');
+      throw new Error(readableErr);
     }
   };
 
@@ -427,8 +431,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (err: any) {
       console.error('Firebase Sign In Error:', err);
-      addToast('Sign In Failed', err.message || 'Invalid credentials or account error', 'error');
-      throw err;
+      const readableErr = formatFirebaseAuthError(err);
+      addToast('Sign In Failed', readableErr, 'error');
+      throw new Error(readableErr);
     }
   };
 
@@ -437,7 +442,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await resetFirebasePassword(email);
       addToast('Reset Email Sent', `Firebase password reset link sent to ${email}`, 'info');
     } catch (err: any) {
-      addToast('Reset Failed', err.message || 'Failed to send reset email', 'error');
+      const readableErr = formatFirebaseAuthError(err);
+      addToast('Reset Failed', readableErr, 'error');
     }
   };
 

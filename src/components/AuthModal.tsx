@@ -5,7 +5,7 @@ import { INITIAL_UNIVERSITIES } from '../data/mockData';
 import { User as UserType } from '../types';
 import { 
   X, Lock, Mail, User as UserIcon, Phone, Building2, GraduationCap, ArrowRight, ShieldCheck, 
-  CheckCircle, FileText, Upload, CheckCircle2, Shield, AlertCircle
+  CheckCircle, FileText, Upload, CheckCircle2, Shield, AlertCircle, ExternalLink
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -49,6 +49,12 @@ export const AuthModal: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  // Clear auth error when tab changes or modal opens
+  useEffect(() => {
+    setAuthError(null);
+  }, [authModalTab, isAuthModalOpen]);
 
   // Populate user data into fields when Google Onboarding tab is active
   useEffect(() => {
@@ -161,6 +167,7 @@ export const AuthModal: React.FC = () => {
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
+    setAuthError(null);
     try {
       let role: 'student' | 'agent' | 'admin' = 'student';
       if (authModalTab === 'agent_signup') role = 'agent';
@@ -169,8 +176,9 @@ export const AuthModal: React.FC = () => {
       else role = 'student';
 
       await loginGoogleOAuth(role);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Google Auth Error:', err);
+      setAuthError(err.message || 'Google authentication failed.');
     } finally {
       setGoogleLoading(false);
     }
@@ -179,6 +187,7 @@ export const AuthModal: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setAuthError(null);
 
     try {
       if (authModalTab === 'google_onboarding') {
@@ -235,6 +244,7 @@ export const AuthModal: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Submit Auth error:', err);
+      setAuthError(err.message || 'Authentication failed. Please check your details.');
     } finally {
       setLoading(false);
     }
@@ -320,6 +330,24 @@ export const AuthModal: React.FC = () => {
 
           {/* Form Body */}
           <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
+            {authError && (
+              <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-300 font-medium flex items-start gap-2.5 shadow-sm">
+                <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-bold">Authentication Notice</p>
+                  <p className="mt-0.5 text-[11px] leading-relaxed">{authError}</p>
+                  {typeof window !== 'undefined' && window.self !== window.top && (
+                    <button
+                      type="button"
+                      onClick={() => window.open(window.location.href, '_blank')}
+                      className="mt-2 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 underline hover:text-emerald-800 flex items-center gap-1 cursor-pointer"
+                    >
+                      <ExternalLink className="w-3 h-3" /> Open App in New Tab to Sign In
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
             {/* Google OAuth Button */}
             {authModalTab !== 'forgot_password' && authModalTab !== 'email_verification_sent' && authModalTab !== 'google_onboarding' && (
               <div className="space-y-3 pb-2 border-b border-slate-200 dark:border-slate-700">

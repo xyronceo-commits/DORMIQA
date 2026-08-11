@@ -239,6 +239,50 @@ export async function logoutFirebase(): Promise<void> {
   await firebaseSignOut(auth);
 }
 
+export function formatFirebaseAuthError(err: any): string {
+  if (!err) return 'An unknown authentication error occurred.';
+  const code = err?.code || err?.message || '';
+  const messageStr = typeof err?.message === 'string' ? err.message : String(err);
+
+  if (code === 'auth/internal-error' || messageStr.includes('internal-error')) {
+    const currentHost = typeof window !== 'undefined' ? window.location.hostname : 'dormiqa.vercel.app';
+    const isIframe = typeof window !== 'undefined' && window.self !== window.top;
+    if (isIframe) {
+      return `Google Sign-In popup is restricted inside iframe preview (${currentHost}). Please open the app in a new browser tab or use Email & Password Sign In.`;
+    }
+    return `Firebase Auth Internal Error (${currentHost}): Please ensure Google Sign-In is enabled in Firebase Console and '${currentHost}' is listed under Authorized Domains.`;
+  }
+  if (code === 'auth/unauthorized-domain' || messageStr.includes('unauthorized-domain')) {
+    const currentHost = typeof window !== 'undefined' ? window.location.hostname : 'dormiqa.vercel.app';
+    return `Unauthorized Domain (${currentHost}): Please add '${currentHost}' to Firebase Console -> Authentication -> Settings -> Authorized domains.`;
+  }
+  if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+    return 'Invalid Credentials: The email or password entered is incorrect.';
+  }
+  if (code === 'auth/email-already-in-use') {
+    return 'Email Already Registered: An account with this email address already exists. Please sign in instead.';
+  }
+  if (code === 'auth/invalid-email') {
+    return 'Invalid Email: Please enter a valid email address.';
+  }
+  if (code === 'auth/weak-password') {
+    return 'Weak Password: Your password must be at least 6 characters long.';
+  }
+  if (code === 'auth/popup-closed-by-user') {
+    return 'Sign-In Canceled: The Google sign-in popup was closed before completing.';
+  }
+  if (code === 'auth/popup-blocked') {
+    return 'Popup Blocked: Your browser blocked the Google sign-in window. Please allow popups for this site.';
+  }
+  if (code === 'auth/operation-not-allowed') {
+    return 'Sign-In Method Disabled: Please enable Google and Email/Password sign-in in your Firebase Console.';
+  }
+  if (code === 'auth/too-many-requests') {
+    return 'Too Many Requests: Access temporarily locked due to repeated failed attempts. Please try again later.';
+  }
+  return messageStr || 'Firebase authentication failed.';
+}
+
 export async function resetFirebasePassword(email: string): Promise<void> {
   await sendPasswordResetEmail(auth, email);
 }
