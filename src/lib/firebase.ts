@@ -127,6 +127,11 @@ if (typeof window !== 'undefined') {
 // ================= FIREBASE AUTHENTICATION & OAUTH =================
 
 export async function loginWithGoogle(preferredRole: UserRole = 'student'): Promise<FirebaseUser> {
+  const isIframe = typeof window !== 'undefined' && window.self !== window.top;
+  if (isIframe) {
+    throw new Error(`Google Sign-In popup is restricted inside iframe preview (${window.location.hostname}). Click "Open App in New Tab" below to use Google Sign-In, or sign in using Email & Password.`);
+  }
+
   const result = await signInWithPopup(auth, googleProvider);
   const user = result.user;
 

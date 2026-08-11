@@ -339,6 +339,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Google OAuth error:', err);
       const readableErr = formatFirebaseAuthError(err);
       addToast('Google Auth Error', readableErr, 'error');
+      throw new Error(readableErr);
     }
   };
 
