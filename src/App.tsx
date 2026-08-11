@@ -28,6 +28,21 @@ const MainContent: React.FC = () => {
   const { user, activeView, setActiveView, selectedInfoDocId, setAuthModalOpen, setAuthModalTab } = useAuth();
 
   React.useEffect(() => {
+    const titles: Record<string, string> = {
+      home: 'Dormiqa — Find Trusted Accommodation',
+      search: 'Dormiqa — Search Student Housing',
+      saved: 'Dormiqa — Saved Accommodations',
+      profile: 'Dormiqa — My Profile',
+      student_dashboard: 'Dormiqa — Student Dashboard',
+      agent_dashboard: 'Dormiqa — Agent Portal',
+      agent_verification: 'Dormiqa — Business Verification',
+      admin_dashboard: 'Dormiqa Admin — Internal Dashboard',
+      info_hub: 'Dormiqa — Student Info Hub',
+    };
+    document.title = titles[activeView] || 'Dormiqa — Find Trusted Accommodation';
+  }, [activeView]);
+
+  React.useEffect(() => {
     if (!user && activeView !== 'home' && activeView !== 'role_select' && activeView !== 'onboarding' && activeView !== 'info_hub') {
       setAuthModalTab('student_signup');
       setAuthModalOpen(true);
