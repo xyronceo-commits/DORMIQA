@@ -57,8 +57,8 @@ interface AuthContextType {
   setSelectedListing: (listing: Listing | null) => void;
   isAuthModalOpen: boolean;
   setAuthModalOpen: (open: boolean) => void;
-  authModalTab: 'login' | 'student_signup' | 'agent_signup' | 'admin_login' | 'forgot_password' | 'email_verification_sent';
-  setAuthModalTab: (tab: 'login' | 'student_signup' | 'agent_signup' | 'admin_login' | 'forgot_password' | 'email_verification_sent') => void;
+  authModalTab: 'login' | 'student_signup' | 'agent_signup' | 'admin_login' | 'forgot_password' | 'email_verification_sent' | 'google_onboarding';
+  setAuthModalTab: (tab: 'login' | 'student_signup' | 'agent_signup' | 'admin_login' | 'forgot_password' | 'email_verification_sent' | 'google_onboarding') => void;
   notifications: NotificationItem[];
   unreadCount: number;
   markNotificationRead: (id: string) => void;
@@ -126,7 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
-  const [authModalTab, setAuthModalTab] = useState<'login' | 'student_signup' | 'agent_signup' | 'admin_login' | 'forgot_password' | 'email_verification_sent'>('login');
+  const [authModalTab, setAuthModalTab] = useState<'login' | 'student_signup' | 'agent_signup' | 'admin_login' | 'forgot_password' | 'email_verification_sent' | 'google_onboarding'>('login');
   
   const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -261,6 +261,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fUser) => {
       if (fUser) {
+        await fUser.reload().catch(() => {});
+        const isEmailVerified = auth.currentUser ? auth.currentUser.emailVerified : (fUser.emailVerified || false);
         let profile = await fetchFirestoreUserProfile(fUser.uid);
         if (!profile) {
           profile = {
@@ -270,16 +272,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             role: 'student',
             avatar: fUser.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
             createdAt: new Date().toISOString(),
-            emailVerified: fUser.emailVerified || false,
+            emailVerified: isEmailVerified,
           };
         } else {
           profile = {
             ...profile,
-            emailVerified: fUser.emailVerified || profile.emailVerified || false,
+            emailVerified: isEmailVerified,
           };
         }
         setUser(profile);
         setRoleState(profile.role);
+      } else {
+        setUser(null);
+        setRoleState('guest');
       }
     });
 
@@ -326,7 +331,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const profile = await fetchFirestoreUserProfile(fUser.uid);
       const userRole = profile?.role || preferredRole || 'student';
       
-      setUser(profile || {
+      const userObj: User = profile || {
         id: fUser.uid,
         email: fUser.email || '',
         name: fUser.displayName || 'Dormiqa User',
@@ -334,21 +339,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         avatar: fUser.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
         createdAt: new Date().toISOString(),
         isVerifiedAgent: userRole === 'agent',
-      });
+        emailVerified: true
+      };
+
+      setUser(userObj);
       setRoleState(userRole);
 
-      addToast('Signed In with Google (Firebase OAuth)', `Welcome ${fUser.displayName || fUser.email}! (${userRole.toUpperCase()})`, 'success');
-      setAuthModalOpen(false);
-
-      if (userRole === 'student') setActiveView('search');
-      else if (userRole === 'agent') {
-        if (preferredRole === 'agent' && !profile?.isVerifiedAgent) {
-          setActiveView('agent_verification');
-        } else {
-          setActiveView('agent_dashboard');
-        }
-      }
-      else if (userRole === 'admin') setActiveView('admin_dashboard');
+      addToast('Google Authenticated! 🔒', 'Google account verified. Please complete your profile details below.', 'info');
+      
+      // Do NOT take them to their page immediately. Give them the onboarding form in AuthModal to fill out details
+      setAuthModalTab('google_onboarding');
+      setAuthModalOpen(true);
     } catch (err: any) {
       console.error('Google OAuth error:', err);
       addToast('Google Auth Error', err.message || 'Failed to authenticate with Google OAuth', 'error');
@@ -358,14 +359,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUpEmailFirebase = async (email: string, pass: string, name: string, userRole: UserRole, extra: Partial<User> = {}) => {
     try {
       const newUser = await registerWithEmail(email, pass, name, userRole, extra);
-      setUser(newUser);
-      setRoleState(newUser.role);
-      addToast('Verification Code Sent ✉️', `A 6-digit verification code has been dispatched to ${email}.`, 'info');
-      setAuthModalTab('email_verification_sent');
+      if (auth.currentUser) {
+        await auth.currentUser.reload().catch(() => {});
+      }
+      const isVerified = auth.currentUser ? auth.currentUser.emailVerified : false;
+      const userObj = { ...newUser, emailVerified: isVerified };
 
-      if (userRole === 'student') setActiveView('search');
-      else if (userRole === 'agent') setActiveView('agent_verification');
-      else if (userRole === 'admin') setActiveView('admin_dashboard');
+      setUser(userObj);
+      setRoleState(userObj.role);
+
+      addToast('Verification Email Sent ✉️', `We have sent a verification link to ${email}.`, 'info');
+      setAuthModalTab('email_verification_sent');
+      setAuthModalOpen(true);
     } catch (err: any) {
       console.error('Firebase Email Registration Error:', err);
       addToast('Registration Failed', err.message || 'Error creating Firebase user', 'error');
@@ -373,27 +378,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const resendVerificationEmail = async (targetEmail?: string) => {
-    const emailToUse = targetEmail || user?.email || verificationEmail;
-    if (!emailToUse) {
-      addToast('Verification Error', 'No active email address available for code dispatch.', 'error');
-      return;
-    }
+  const resendVerificationEmail = async () => {
     try {
-      await resendFirebaseEmailVerification(emailToUse);
-      addToast('Verification Code Dispatched ✉️', `A 6-digit code was sent to ${emailToUse}`, 'info');
+      await resendFirebaseEmailVerification();
+      addToast('Verification Email Sent ✉️', 'A new verification link was sent to your email address.', 'info');
     } catch (err: any) {
-      addToast('Resend Failed', err.message || 'Unable to resend verification code.', 'error');
+      addToast('Resend Failed', err.message || 'Unable to resend verification email.', 'error');
+      throw err;
     }
   };
 
   const checkVerificationStatus = async (): Promise<boolean> => {
-    if (user?.emailVerified) {
+    const isVerified = await checkFirebaseEmailVerified();
+    if (isVerified) {
+      if (user) {
+        setUser({ ...user, emailVerified: true });
+      }
       addToast('Email Verified! ✅', 'Your account email is verified.', 'success');
+      setAuthModalOpen(false);
       return true;
     } else {
-      openVerificationModal(user?.email);
-      addToast('Pending Verification ✉️', 'Please enter your 6-digit verification code.', 'info');
+      addToast('Verification Pending', "Your email hasn't been verified yet. Please click the verification link sent to your email.", 'warning');
       return false;
     }
   };
@@ -401,25 +406,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInEmailFirebase = async (email: string, pass: string) => {
     try {
       const fUser = await loginWithEmail(email, pass);
+      if (auth.currentUser) {
+        await auth.currentUser.reload().catch(() => {});
+      }
+      const isVerified = auth.currentUser ? auth.currentUser.emailVerified : (fUser.emailVerified || false);
+
       const profile = await fetchFirestoreUserProfile(fUser.uid);
       const targetRole = profile?.role || 'student';
       
-      setUser(profile || {
-        id: fUser.uid,
-        email: fUser.email || email,
-        name: fUser.displayName || 'Dormiqa User',
-        role: targetRole,
-        avatar: fUser.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
-        createdAt: new Date().toISOString()
-      });
+      const userObj: User = {
+        ...(profile || {
+          id: fUser.uid,
+          email: fUser.email || email,
+          name: fUser.displayName || 'Dormiqa User',
+          role: targetRole,
+          avatar: fUser.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+          createdAt: new Date().toISOString()
+        }),
+        emailVerified: isVerified
+      };
+
+      setUser(userObj);
       setRoleState(targetRole);
 
-      addToast('Signed In (Firebase Auth)', `Welcome back!`, 'success');
-      setAuthModalOpen(false);
+      if (!isVerified) {
+        addToast('Verification Required ✉️', 'Please verify your email to access your account.', 'warning');
+        setAuthModalTab('email_verification_sent');
+        setAuthModalOpen(true);
+      } else {
+        addToast('Signed In (Firebase Auth)', `Welcome back, ${userObj.name}!`, 'success');
+        setAuthModalOpen(false);
 
-      if (targetRole === 'student') setActiveView('search');
-      else if (targetRole === 'agent') setActiveView('agent_dashboard');
-      else if (targetRole === 'admin') setActiveView('admin_dashboard');
+        if (targetRole === 'student') setActiveView('search');
+        else if (targetRole === 'agent') setActiveView('agent_dashboard');
+        else if (targetRole === 'admin') setActiveView('admin_dashboard');
+      }
     } catch (err: any) {
       console.error('Firebase Sign In Error:', err);
       addToast('Sign In Failed', err.message || 'Invalid credentials or account error', 'error');

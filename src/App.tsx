@@ -47,6 +47,13 @@ const MainContent: React.FC = () => {
       setAuthModalTab('student_signup');
       setAuthModalOpen(true);
       setActiveView('home');
+    } else if (user && user.emailVerified === false) {
+      const isProtectedDashboard = ['student_dashboard', 'agent_dashboard', 'agent_verification', 'admin_dashboard'].includes(activeView);
+      if (isProtectedDashboard) {
+        setAuthModalTab('email_verification_sent');
+        setAuthModalOpen(true);
+        setActiveView('home');
+      }
     }
   }, [user, activeView, setActiveView, setAuthModalOpen, setAuthModalTab]);
 

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { updateFirestoreUserProfile } from '../lib/firebase';
+import { updateFirestoreUserProfile, checkFirebaseEmailVerified } from '../lib/firebase';
 import { INITIAL_UNIVERSITIES } from '../data/mockData';
+import { User as UserType } from '../types';
 import { 
-  X, Lock, Mail, User, Phone, Building2, GraduationCap, ArrowRight, ShieldCheck, 
+  X, Lock, Mail, User as UserIcon, Phone, Building2, GraduationCap, ArrowRight, ShieldCheck, 
   CheckCircle, FileText, Upload, CheckCircle2, Shield, AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -23,7 +24,9 @@ export const AuthModal: React.FC = () => {
     checkVerificationStatus,
     addToast,
     user,
-    setUser
+    setUser,
+    setSelectedUniversity,
+    setActiveView
   } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -41,192 +44,108 @@ export const AuthModal: React.FC = () => {
 
   // Sign In Role Selector state
   const [loginRole, setLoginRole] = useState<'student' | 'agent'>('student');
+  const [googleRole, setGoogleRole] = useState<'student' | 'agent'>('student');
 
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
 
-  // 6-Digit Verification Code state
-  const [codeDigits, setCodeDigits] = useState<string[]>(['', '', '', '', '', '']);
-  const [codeTimeLeft, setCodeTimeLeft] = useState<number>(600);
-  const [codeIsExpired, setCodeIsExpired] = useState<boolean>(false);
-  const [codeError, setCodeError] = useState<string | null>(null);
-  const [codeSuccess, setCodeSuccess] = useState<boolean>(false);
-  const [codeResending, setCodeResending] = useState<boolean>(false);
-  const [codeResendCooldown, setCodeResendCooldown] = useState<number>(0);
-  const codeInputRefs = React.useRef<(HTMLInputElement | null)[]>([]);
-
-  // Send verification code when tab switches to email_verification_sent
-  React.useEffect(() => {
-    if (authModalTab === 'email_verification_sent' && email) {
-      handleSendVerificationCode(true);
+  // Populate user data into fields when Google Onboarding tab is active
+  useEffect(() => {
+    if (authModalTab === 'google_onboarding' && user) {
+      if (user.name) setName(user.name);
+      if (user.email) setEmail(user.email);
+      if (user.phone) setPhone(user.phone);
+      if (user.universityId) setUniversityId(user.universityId);
+      if (user.businessName) setBusinessName(user.businessName);
+      if (user.officeAddress) setOfficeAddress(user.officeAddress);
+      if (user.role === 'agent') setGoogleRole('agent');
+      else setGoogleRole('student');
     }
-  }, [authModalTab, email]);
+  }, [authModalTab, user]);
 
-  // Focus first input box on verification tab mount
-  React.useEffect(() => {
-    if (authModalTab === 'email_verification_sent' && !codeSuccess) {
-      setTimeout(() => {
-        codeInputRefs.current[0]?.focus();
-      }, 150);
-    }
-  }, [authModalTab, codeSuccess]);
+  // Firebase Email Link Verification State
+  const [resendCooldown, setResendCooldown] = useState<number>(0);
+  const [resendingEmail, setResendingEmail] = useState<boolean>(false);
+  const [checkingVerification, setCheckingVerification] = useState<boolean>(false);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
+  const [verificationSuccess, setVerificationSuccess] = useState<boolean>(false);
 
-  // Live countdown timer (10:00 -> 00:00)
-  React.useEffect(() => {
-    if (authModalTab !== 'email_verification_sent' || codeIsExpired || codeSuccess) return;
-
-    if (codeTimeLeft <= 0) {
-      setCodeIsExpired(true);
-      setCodeError("This code has expired. Request a new code.");
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setCodeTimeLeft(prev => prev - 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [authModalTab, codeTimeLeft, codeIsExpired, codeSuccess]);
-
-  // Resend cooldown timer
-  React.useEffect(() => {
-    if (codeResendCooldown <= 0) return;
+  // Resend cooldown timer (60s)
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
     const interval = setInterval(() => {
-      setCodeResendCooldown(prev => prev - 1);
+      setResendCooldown(prev => prev - 1);
     }, 1000);
     return () => clearInterval(interval);
-  }, [codeResendCooldown]);
+  }, [resendCooldown]);
 
-  const handleSendVerificationCode = async (initial = false) => {
-    if (!email) return;
-    if (!initial && codeResendCooldown > 0) return;
+  // Automatic periodic reload and check for email verification while modal is open
+  useEffect(() => {
+    if (authModalTab !== 'email_verification_sent' || verificationSuccess) return;
 
-    setCodeResending(true);
-    setCodeError(null);
+    const interval = setInterval(async () => {
+      try {
+        const isVerified = await checkFirebaseEmailVerified();
+        if (isVerified) {
+          setVerificationSuccess(true);
+          if (user) {
+            setUser({ ...user, emailVerified: true });
+            if (user.role === 'student') setActiveView('search');
+            else if (user.role === 'agent') setActiveView('agent_dashboard');
+            else if (user.role === 'admin') setActiveView('admin_dashboard');
+          }
+          addToast('Email Verified! ✅', 'Your account email is verified.', 'success');
+          setTimeout(() => {
+            setAuthModalOpen(false);
+          }, 1200);
+        }
+      } catch (err) {
+        // silent check during polling
+      }
+    }, 3000);
 
+    return () => clearInterval(interval);
+  }, [authModalTab, verificationSuccess, user, setActiveView, setAuthModalOpen, addToast]);
+
+  const handleResendVerificationEmail = async () => {
+    if (resendCooldown > 0 || resendingEmail) return;
+    setResendingEmail(true);
+    setVerificationError(null);
     try {
-      const res = await fetch('/api/auth/send-verification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        setCodeError(data.error || 'Failed to dispatch verification code.');
-        return;
-      }
-
-      setCodeTimeLeft(600);
-      setCodeIsExpired(false);
-      setCodeDigits(['', '', '', '', '', '']);
-      setCodeResendCooldown(60);
-
-      if (!initial) {
-        addToast('Verification Code Sent', `A new 6-digit code was sent to ${email}`, 'success');
-      }
-
-      setTimeout(() => {
-        codeInputRefs.current[0]?.focus();
-      }, 100);
-    } catch (err) {
-      setCodeError('Server error dispatching verification code.');
+      await resendVerificationEmail();
+      setResendCooldown(60);
+    } catch (err: any) {
+      setVerificationError(err?.message || 'Unable to resend verification email.');
     } finally {
-      setCodeResending(false);
+      setResendingEmail(false);
     }
   };
 
-  const handleDigitChange = (index: number, value: string) => {
-    const cleanValue = value.replace(/[^0-9]/g, '');
-    if (!cleanValue && value !== '') return;
-
-    const newDigits = [...codeDigits];
-    newDigits[index] = cleanValue.slice(-1);
-    setCodeDigits(newDigits);
-    setCodeError(null);
-
-    if (cleanValue && index < 5) {
-      codeInputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace') {
-      if (!codeDigits[index] && index > 0) {
-        codeInputRefs.current[index - 1]?.focus();
-      }
-    } else if (e.key === 'ArrowLeft' && index > 0) {
-      codeInputRefs.current[index - 1]?.focus();
-    } else if (e.key === 'ArrowRight' && index < 5) {
-      codeInputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pastedData = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6);
-    if (!pastedData) return;
-
-    const newDigits = ['', '', '', '', '', ''];
-    for (let i = 0; i < pastedData.length; i++) {
-      newDigits[i] = pastedData[i];
-    }
-    setCodeDigits(newDigits);
-    setCodeError(null);
-
-    const nextFocusIndex = Math.min(pastedData.length, 5);
-    codeInputRefs.current[nextFocusIndex]?.focus();
-  };
-
-  const handleVerifyCodeSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const code = codeDigits.join('');
-
-    if (code.length !== 6) {
-      setCodeError('Please enter all 6 digits of the code.');
-      return;
-    }
-
-    if (codeIsExpired) {
-      setCodeError('This code has expired. Request a new code.');
-      return;
-    }
-
-    setLoading(true);
-    setCodeError(null);
-
+  const handleIVerifiedMyEmail = async () => {
+    setCheckingVerification(true);
+    setVerificationError(null);
     try {
-      const res = await fetch('/api/auth/verify-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        setCodeError(data.error || 'Incorrect code. Please try again.');
-        if (data.expired) setCodeIsExpired(true);
-        return;
+      const isVerified = await checkFirebaseEmailVerified();
+      if (isVerified) {
+        setVerificationSuccess(true);
+        if (user) {
+          setUser({ ...user, emailVerified: true });
+          if (user.role === 'student') setActiveView('search');
+          else if (user.role === 'agent') setActiveView('agent_dashboard');
+          else if (user.role === 'admin') setActiveView('admin_dashboard');
+        }
+        addToast('Email Verified! ✅', 'Your account email is verified.', 'success');
+        setTimeout(() => {
+          setAuthModalOpen(false);
+        }, 1200);
+      } else {
+        setVerificationError("Your email hasn't been verified yet. Please click the verification link sent to your email.");
       }
-
-      setCodeSuccess(true);
-      addToast('Email Verified!', 'Your email address is now verified.', 'success');
-
-      if (user) {
-        setUser({ ...user, emailVerified: true });
-        updateFirestoreUserProfile(user.id, { emailVerified: true }).catch(() => {});
-      }
-
-      setTimeout(() => {
-        setAuthModalOpen(false);
-      }, 1500);
-    } catch (err) {
-      setCodeError('Verification failed. Please try again.');
+    } catch (err: any) {
+      setVerificationError("Unable to verify status. Please try again.");
     } finally {
-      setLoading(false);
+      setCheckingVerification(false);
     }
   };
 
@@ -262,7 +181,39 @@ export const AuthModal: React.FC = () => {
     setLoading(true);
 
     try {
-      if (authModalTab === 'forgot_password') {
+      if (authModalTab === 'google_onboarding') {
+        const chosenUni = INITIAL_UNIVERSITIES.find(u => u.id === universityId) || INITIAL_UNIVERSITIES[0];
+        const updates: Partial<UserType> = {
+          name: name.trim() || user?.name || 'Dormiqa User',
+          role: googleRole,
+          universityId: chosenUni.id,
+          universityName: chosenUni.name,
+          phone: phone.trim() || user?.phone || '',
+          ...(googleRole === 'agent' ? {
+            businessName: businessName.trim() || 'Dormiqa Housing Agent',
+            officeAddress: officeAddress.trim() || 'Campus Gate Complex',
+            isVerifiedAgent: user?.isVerifiedAgent ?? true,
+            verificationStatus: user?.verificationStatus ?? 'verified',
+          } : {})
+        };
+
+        if (user) {
+          await updateFirestoreUserProfile(user.id, updates);
+          const updatedUser: UserType = { ...user, ...updates };
+          setUser(updatedUser);
+          setSelectedUniversity(chosenUni);
+          addToast('Profile Setup Complete! 🎉', `Welcome to Dormiqa, ${updatedUser.name}!`, 'success');
+          setAuthModalOpen(false);
+
+          if (googleRole === 'student') setActiveView('search');
+          else if (googleRole === 'agent') {
+            if (!updatedUser.isVerifiedAgent) setActiveView('agent_verification');
+            else setActiveView('agent_dashboard');
+          } else if (googleRole === 'admin') {
+            setActiveView('admin_dashboard');
+          }
+        }
+      } else if (authModalTab === 'forgot_password') {
         await resetPasswordFirebase(email);
         setForgotSent(true);
       } else if (authModalTab === 'agent_signup') {
@@ -281,7 +232,7 @@ export const AuthModal: React.FC = () => {
           universityId
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Submit Auth error:', err);
     } finally {
       setLoading(false);
@@ -311,11 +262,14 @@ export const AuthModal: React.FC = () => {
                   {authModalTab === 'admin_login' && 'Admin Console Sign In'}
                   {authModalTab === 'forgot_password' && 'Reset Account Password'}
                   {authModalTab === 'email_verification_sent' && 'Verify Your Email Address'}
+                  {authModalTab === 'google_onboarding' && 'Complete Your Profile Information'}
                 </h3>
                 <p className="text-[11px] text-neutral-500">
-                  {authModalTab === 'agent_signup'
-                    ? 'Create an agent account (Business Verification follows)'
-                    : 'Verified Student Housing Portal'}
+                  {authModalTab === 'google_onboarding'
+                    ? 'Fill in your name, school, and contact details after Google sign-in'
+                    : authModalTab === 'agent_signup'
+                      ? 'Create an agent account (Business Verification follows)'
+                      : 'Verified Student Housing Portal'}
                 </p>
               </div>
             </div>
@@ -328,7 +282,7 @@ export const AuthModal: React.FC = () => {
           </div>
 
           {/* Role Tab Selector */}
-          {authModalTab !== 'forgot_password' && authModalTab !== 'email_verification_sent' && (
+          {authModalTab !== 'forgot_password' && authModalTab !== 'email_verification_sent' && authModalTab !== 'google_onboarding' && (
             <div className="flex border-b border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-950 text-xs font-bold shrink-0">
               <button
                 onClick={() => setAuthModalTab('student_signup')}
@@ -366,7 +320,7 @@ export const AuthModal: React.FC = () => {
           {/* Form Body */}
           <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
             {/* Google OAuth Button */}
-            {authModalTab !== 'forgot_password' && authModalTab !== 'email_verification_sent' && (
+            {authModalTab !== 'forgot_password' && authModalTab !== 'email_verification_sent' && authModalTab !== 'google_onboarding' && (
               <div className="space-y-3 pb-2 border-b border-slate-200 dark:border-slate-700">
                 <button
                   type="button"
@@ -416,9 +370,172 @@ export const AuthModal: React.FC = () => {
               </div>
             )}
 
-            {authModalTab === 'email_verification_sent' ? (
+            {authModalTab === 'google_onboarding' ? (
+              <div className="space-y-4 py-1">
+                {/* Google Email Verified Badge */}
+                <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 shadow-xs">
+                      <svg className="w-4 h-4" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Google OAuth Verified</p>
+                      <p className="text-xs font-bold text-slate-900 dark:text-slate-100">{user?.email || email}</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/60 px-2.5 py-1 rounded-full flex items-center gap-1 shrink-0">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Verified
+                  </span>
+                </div>
+
+                {/* Account Type Selector */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Account Type / Role
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setGoogleRole('student')}
+                      className={`p-2.5 rounded-xl border-2 font-bold text-xs flex items-center justify-center gap-2 transition-all ${
+                        googleRole === 'student'
+                          ? 'border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 shadow-xs'
+                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400'
+                      }`}
+                    >
+                      <GraduationCap className="w-4 h-4 text-emerald-600" />
+                      <span>Student Scholar</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setGoogleRole('agent')}
+                      className={`p-2.5 rounded-xl border-2 font-bold text-xs flex items-center justify-center gap-2 transition-all ${
+                        googleRole === 'agent'
+                          ? 'border-black dark:border-white bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs'
+                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400'
+                      }`}
+                    >
+                      <Building2 className="w-4 h-4 text-indigo-600" />
+                      <span>Property Agent</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Full Name */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Full Legal Name
+                  </label>
+                  <div className="relative">
+                    <UserIcon className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. Tunde Bakare"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Primary Campus / School / University Choice */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Primary Campus / School / University Choice
+                  </label>
+                  <div className="relative">
+                    <GraduationCap className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <select
+                      value={universityId}
+                      onChange={(e) => setUniversityId(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
+                    >
+                      {INITIAL_UNIVERSITIES.map(u => (
+                        <option key={u.id} value={u.id}>{u.name} ({u.shortName}) - {u.state} State</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Phone Number */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    WhatsApp / Contact Phone Number
+                  </label>
+                  <div className="relative">
+                    <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="e.g. +234 803 123 4567"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Agent specific fields */}
+                {googleRole === 'agent' && (
+                  <>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Agency / Business Name
+                      </label>
+                      <div className="relative">
+                        <Building2 className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          value={businessName}
+                          onChange={(e) => setBusinessName(e.target.value)}
+                          placeholder="e.g. Prime Student Housing Properties Ltd"
+                          className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Office Address / Campus Location
+                      </label>
+                      <div className="relative">
+                        <FileText className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          value={officeAddress}
+                          onChange={(e) => setOfficeAddress(e.target.value)}
+                          placeholder="e.g. Suite 4, University Commercial Gate Complex"
+                          className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Save & Continue Button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs transition-colors flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 mt-3"
+                >
+                  {loading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <span>Save Profile & Continue</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+            ) : authModalTab === 'email_verification_sent' ? (
               <div className="space-y-5 py-2">
-                {codeSuccess ? (
+                {verificationSuccess ? (
                   <div className="text-center space-y-3 py-6">
                     <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center">
                       <CheckCircle2 className="w-8 h-8" />
@@ -428,103 +545,64 @@ export const AuthModal: React.FC = () => {
                         Email Verified!
                       </h4>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        Thank you for confirming <span className="font-semibold text-slate-800 dark:text-slate-200">{email}</span>.
+                        Thank you for confirming <span className="font-semibold text-slate-800 dark:text-slate-200">{email || user?.email}</span>.
                       </p>
                     </div>
                   </div>
                 ) : (
                   <>
-                    <div className="space-y-1 text-center">
+                    <div className="text-center space-y-2">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center">
+                        <Mail className="w-6 h-6" />
+                      </div>
                       <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">
                         Verify your email
                       </h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Enter the 6-digit code we sent to <span className="font-semibold text-slate-800 dark:text-slate-200">{email || 'your email'}</span>.
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
+                        We've sent a verification link to <span className="font-semibold text-slate-800 dark:text-slate-200">{email || user?.email || 'your email'}</span>. Please check your inbox and click the link to verify your account.
                       </p>
                     </div>
 
-                    {codeError && (
+                    {verificationError && (
                       <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-center gap-2">
                         <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
-                        <span>{codeError}</span>
+                        <span>{verificationError}</span>
                       </div>
                     )}
 
-                    {/* 6 Digit Input Boxes */}
-                    <div className="flex items-center justify-center gap-1.5 sm:gap-2 pt-1">
-                      {codeDigits.map((digit, idx) => (
-                        <input
-                          key={idx}
-                          ref={el => (codeInputRefs.current[idx] = el)}
-                          type="text"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          maxLength={1}
-                          value={digit}
-                          onChange={e => handleDigitChange(idx, e.target.value)}
-                          onKeyDown={e => handleKeyDown(idx, e)}
-                          onPaste={handlePaste}
-                          disabled={loading || codeIsExpired}
-                          className={`w-10 h-12 sm:w-11 sm:h-12 text-center text-lg font-bold rounded-xl border transition-all ${
-                            digit
-                              ? 'border-emerald-600 dark:border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30 text-slate-900 dark:text-slate-100 shadow-xs'
-                              : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:border-emerald-500 focus:outline-none'
-                          } ${codeIsExpired ? 'border-rose-300 dark:border-rose-800 bg-rose-50/30 dark:bg-rose-950/20' : ''}`}
-                        />
-                      ))}
-                    </div>
-
-                    {/* Countdown Timer */}
-                    <div className="text-center">
-                      {codeIsExpired ? (
-                        <p className="text-xs font-bold text-rose-600 dark:text-rose-400">
-                          This code has expired. Request a new code.
-                        </p>
-                      ) : (
-                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                          Code expires in <span className="font-bold text-slate-800 dark:text-slate-200">
-                            {Math.floor(Math.max(0, codeTimeLeft) / 60).toString().padStart(2, '0')}:
-                            {(Math.max(0, codeTimeLeft) % 60).toString().padStart(2, '0')}
-                          </span>
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Resend Link */}
-                    <div className="text-center">
+                    <div className="space-y-2.5 pt-2">
                       <button
                         type="button"
-                        onClick={() => handleSendVerificationCode(false)}
-                        disabled={codeResending || codeResendCooldown > 0}
-                        className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline disabled:opacity-50 inline-flex items-center gap-1 transition-opacity"
+                        onClick={handleIVerifiedMyEmail}
+                        disabled={checkingVerification}
+                        className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 disabled:opacity-50"
                       >
-                        {codeResending ? (
-                          <div className="w-3 h-3 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                        {checkingVerification ? (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <>
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span>I've verified my email</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleResendVerificationEmail}
+                        disabled={resendingEmail || resendCooldown > 0}
+                        className="w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        {resendingEmail ? (
+                          <div className="w-3.5 h-3.5 border-2 border-slate-600 dark:border-slate-300 border-t-transparent rounded-full animate-spin" />
                         ) : null}
                         <span>
-                          {codeResendCooldown > 0
-                            ? `Resend code in ${codeResendCooldown}s`
-                            : "Didn't receive it? Resend code"}
+                          {resendCooldown > 0
+                            ? `Resend verification email in ${resendCooldown}s`
+                            : 'Resend verification email'}
                         </span>
                       </button>
                     </div>
-
-                    {/* Verify Button */}
-                    <button
-                      type="button"
-                      onClick={handleVerifyCodeSubmit}
-                      disabled={loading || codeDigits.some(d => d === '') || codeIsExpired}
-                      className="w-full py-3 px-4 rounded-xl bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-xs disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      {loading ? (
-                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <>
-                          <span>Verify</span>
-                          <ArrowRight className="w-4 h-4" />
-                        </>
-                      )}
-                    </button>
                   </>
                 )}
               </div>
@@ -599,7 +677,7 @@ export const AuthModal: React.FC = () => {
                       Full Legal Name
                     </label>
                     <div className="relative">
-                      <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <UserIcon className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
                         type="text"
                         required

@@ -91,7 +91,7 @@ export const UserProfileSection: React.FC = () => {
                         onClick={() => openVerificationModal(user.email)}
                         className="px-2 py-0.5 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold shadow-xs transition-colors"
                       >
-                        Enter 6-Digit Code
+                        Verify Email Status
                       </button>
                     </div>
                   )}

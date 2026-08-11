@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { X, CheckCircle2, AlertCircle, RefreshCw, Mail, ShieldCheck, ArrowRight } from 'lucide-react';
+import { checkFirebaseEmailVerified } from '../lib/firebase';
+import { X, CheckCircle2, AlertCircle, Mail } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface VerificationCodeModalProps {
@@ -16,53 +17,15 @@ export const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
   onClose,
   onSuccess
 }) => {
-  const { addToast, user, setUser } = useAuth();
+  const { resendVerificationEmail, addToast, user, setUser } = useAuth();
 
-  const [digits, setDigits] = useState<string[]>(['', '', '', '', '', '']);
-  const [timeLeft, setTimeLeft] = useState<number>(600); // 10 minutes (600s)
-  const [isExpired, setIsExpired] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
   const [resending, setResending] = useState<boolean>(false);
+  const [checking, setChecking] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
   const [resendCooldown, setResendCooldown] = useState<number>(0);
 
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  // Automatically request code if opened and timer not started
-  useEffect(() => {
-    if (isOpen && email) {
-      handleSendVerificationCode(true);
-    }
-  }, [isOpen, email]);
-
-  // Focus first input box on mount
-  useEffect(() => {
-    if (isOpen && !success) {
-      setTimeout(() => {
-        inputRefs.current[0]?.focus();
-      }, 150);
-    }
-  }, [isOpen, success]);
-
-  // Live countdown timer (10:00 -> 00:00)
-  useEffect(() => {
-    if (!isOpen || isExpired || success) return;
-
-    if (timeLeft <= 0) {
-      setIsExpired(true);
-      setErrorMessage("This code has expired. Request a new code.");
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setTimeLeft(prev => prev - 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [isOpen, timeLeft, isExpired, success]);
-
-  // Resend cooldown timer
+  // Resend cooldown timer (60s)
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const interval = setInterval(() => {
@@ -71,159 +34,75 @@ export const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
     return () => clearInterval(interval);
   }, [resendCooldown]);
 
-  const handleSendVerificationCode = async (initial = false) => {
-    if (!email) return;
-    if (!initial && resendCooldown > 0) return;
+  // Automatic periodic check for email verification while modal is open
+  useEffect(() => {
+    if (!isOpen || success) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const isVerified = await checkFirebaseEmailVerified();
+        if (isVerified) {
+          setSuccess(true);
+          if (user) {
+            setUser({ ...user, emailVerified: true });
+          }
+          addToast('Email Verified! ✅', 'Your account email is verified.', 'success');
+          if (onSuccess) onSuccess();
+          setTimeout(() => {
+            onClose();
+          }, 1200);
+        }
+      } catch (err) {
+        // silent check during polling
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isOpen, success, user, onSuccess, onClose]);
+
+  const handleResend = async () => {
+    if (resendCooldown > 0 || resending) return;
 
     setResending(true);
     setErrorMessage(null);
 
     try {
-      const res = await fetch('/api/auth/send-verification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        setErrorMessage(data.error || 'Failed to dispatch verification code.');
-        if (!initial) {
-          addToast('Code Dispatch Failed', data.error || 'Could not send verification code', 'error');
-        }
-        return;
-      }
-
-      // Reset state on code sent
-      setTimeLeft(600); // 10 minutes
-      setIsExpired(false);
-      setDigits(['', '', '', '', '', '']);
-      setResendCooldown(60); // 60s resend cooldown
-
-      if (!initial) {
-        addToast('Verification Code Sent', `A new 6-digit code was sent to ${email}`, 'success');
-      }
-
-      // Focus first input box
-      setTimeout(() => {
-        inputRefs.current[0]?.focus();
-      }, 100);
+      await resendVerificationEmail();
+      setResendCooldown(60);
     } catch (err: any) {
-      setErrorMessage('Server connection error. Please try again.');
+      setErrorMessage(err?.message || 'Failed to resend verification email.');
     } finally {
       setResending(false);
     }
   };
 
-  const handleDigitChange = (index: number, value: string) => {
-    // Only allow numeric input
-    const cleanValue = value.replace(/[^0-9]/g, '');
-    if (!cleanValue && value !== '') return;
-
-    const newDigits = [...digits];
-    newDigits[index] = cleanValue.slice(-1); // keep last typed char
-    setDigits(newDigits);
-    setErrorMessage(null);
-
-    // Auto-advance focus to next input
-    if (cleanValue && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace') {
-      if (!digits[index] && index > 0) {
-        inputRefs.current[index - 1]?.focus();
-      }
-    } else if (e.key === 'ArrowLeft' && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    } else if (e.key === 'ArrowRight' && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pastedData = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6);
-    if (!pastedData) return;
-
-    const newDigits = ['', '', '', '', '', ''];
-    for (let i = 0; i < pastedData.length; i++) {
-      newDigits[i] = pastedData[i];
-    }
-    setDigits(newDigits);
-    setErrorMessage(null);
-
-    // Focus last filled digit or final box
-    const nextFocusIndex = Math.min(pastedData.length, 5);
-    inputRefs.current[nextFocusIndex]?.focus();
-  };
-
-  const handleVerifySubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    const code = digits.join('');
-
-    if (code.length !== 6) {
-      setErrorMessage('Please enter all 6 digits of the code.');
-      return;
-    }
-
-    if (isExpired) {
-      setErrorMessage('This code has expired. Request a new code.');
-      return;
-    }
-
-    setLoading(true);
+  const handleCheckVerification = async () => {
+    setChecking(true);
     setErrorMessage(null);
 
     try {
-      const res = await fetch('/api/auth/verify-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        setErrorMessage(data.error || 'Incorrect code. Please check and try again.');
-        if (data.expired) {
-          setIsExpired(true);
+      const isVerified = await checkFirebaseEmailVerified();
+      if (isVerified) {
+        setSuccess(true);
+        if (user) {
+          setUser({ ...user, emailVerified: true });
         }
-        return;
+        addToast('Email Verified! ✅', 'Your account email is verified.', 'success');
+        if (onSuccess) onSuccess();
+        setTimeout(() => {
+          onClose();
+        }, 1200);
+      } else {
+        setErrorMessage("Your email hasn't been verified yet. Please check your inbox and click the link.");
       }
-
-      // Success
-      setSuccess(true);
-      addToast('Email Verified!', 'Your email address is now verified.', 'success');
-
-      // Update user state if logged in
-      if (user) {
-        setUser({ ...user, emailVerified: true });
-      }
-
-      if (onSuccess) {
-        onSuccess();
-      }
-
-      setTimeout(() => {
-        onClose();
-      }, 1500);
-    } catch (err: any) {
-      setErrorMessage('Verification server error. Please try again.');
+    } catch (err) {
+      setErrorMessage('Unable to check verification status. Please try again.');
     } finally {
-      setLoading(false);
+      setChecking(false);
     }
   };
 
   if (!isOpen) return null;
-
-  // Format timer string 10:00
-  const minutes = Math.floor(Math.max(0, timeLeft) / 60).toString().padStart(2, '0');
-  const seconds = (Math.max(0, timeLeft) % 60).toString().padStart(2, '0');
-  const isFullCodeEntered = digits.every(d => d !== '');
 
   return (
     <AnimatePresence>
@@ -260,15 +139,15 @@ export const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
           ) : (
             <>
               {/* Header */}
-              <div className="space-y-1 text-center">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center mb-2">
-                  <ShieldCheck className="w-6 h-6" />
+              <div className="space-y-2 text-center">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center mb-1">
+                  <Mail className="w-6 h-6" />
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                   Verify your email
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  We've sent a 6-digit verification code to <span className="font-semibold text-slate-800 dark:text-slate-200">{email}</span>.
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
+                  We've sent a verification link to <span className="font-semibold text-slate-800 dark:text-slate-200">{email || 'your email'}</span>. Please check your inbox and click the link to verify your account.
                 </p>
               </div>
 
@@ -280,80 +159,40 @@ export const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
                 </div>
               )}
 
-              {/* Form */}
-              <form onSubmit={handleVerifySubmit} className="space-y-5">
-                {/* 6 Digit Input Boxes */}
-                <div className="flex items-center justify-center gap-1.5 sm:gap-2">
-                  {digits.map((digit, idx) => (
-                    <input
-                      key={idx}
-                      ref={el => (inputRefs.current[idx] = el)}
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      maxLength={1}
-                      value={digit}
-                      onChange={e => handleDigitChange(idx, e.target.value)}
-                      onKeyDown={e => handleKeyDown(idx, e)}
-                      onPaste={handlePaste}
-                      disabled={loading || isExpired}
-                      className={`w-10 h-12 sm:w-11 sm:h-12 text-center text-lg font-bold rounded-xl border transition-all ${
-                        digit
-                          ? 'border-emerald-600 dark:border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30 text-slate-900 dark:text-slate-100 shadow-sm'
-                          : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:border-emerald-500 focus:outline-none'
-                      } ${isExpired ? 'border-rose-300 dark:border-rose-800 bg-rose-50/30 dark:bg-rose-950/20' : ''}`}
-                    />
-                  ))}
-                </div>
-
-                {/* Countdown Timer */}
-                <div className="text-center">
-                  {isExpired ? (
-                    <p className="text-xs font-bold text-rose-600 dark:text-rose-400">
-                      This code has expired. Request a new code.
-                    </p>
-                  ) : (
-                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      Code expires in <span className="font-bold text-slate-800 dark:text-slate-200">{minutes}:{seconds}</span>
-                    </p>
-                  )}
-                </div>
-
-                {/* Resend Link */}
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={() => handleSendVerificationCode(false)}
-                    disabled={resending || resendCooldown > 0}
-                    className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline disabled:opacity-50 inline-flex items-center gap-1 transition-opacity"
-                  >
-                    {resending ? (
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    ) : null}
-                    <span>
-                      {resendCooldown > 0
-                        ? `Resend code in ${resendCooldown}s`
-                        : "Didn't receive it? Resend code"}
-                    </span>
-                  </button>
-                </div>
-
-                {/* Primary Action Button */}
+              {/* Action Buttons */}
+              <div className="space-y-2.5 pt-2">
                 <button
-                  type="submit"
-                  disabled={loading || !isFullCodeEntered || isExpired}
-                  className="w-full py-3 px-4 rounded-xl bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                  type="button"
+                  onClick={handleCheckVerification}
+                  disabled={checking}
+                  className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 disabled:opacity-50"
                 >
-                  {loading ? (
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  {checking ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <>
-                      <span>Verify</span>
-                      <ArrowRight className="w-4 h-4" />
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>I've verified my email</span>
                     </>
                   )}
                 </button>
-              </form>
+
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resending || resendCooldown > 0}
+                  className="w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {resending ? (
+                    <div className="w-3.5 h-3.5 border-2 border-slate-600 dark:border-slate-300 border-t-transparent rounded-full animate-spin" />
+                  ) : null}
+                  <span>
+                    {resendCooldown > 0
+                      ? `Resend verification email in ${resendCooldown}s`
+                      : 'Resend verification email'}
+                  </span>
+                </button>
+              </div>
             </>
           )}
         </motion.div>
