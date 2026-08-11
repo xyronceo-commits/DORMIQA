@@ -102,15 +102,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isProfileModalOpen, setProfileModalOpen] = useState(false);
 
-  const [savedAccounts, setSavedAccounts] = useState<User[]>(() => {
+  const [savedAccounts, setSavedAccounts] = useState<User[]>([]);
+
+  // Clear legacy local storage mock account caches on mount
+  useEffect(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('dormiqa_saved_accounts') || localStorage.getItem('campora_saved_accounts');
-      if (saved) {
-        try { return JSON.parse(saved); } catch (e) { /* fallback */ }
-      }
+      localStorage.removeItem('dormiqa_saved_accounts');
+      localStorage.removeItem('campora_saved_accounts');
     }
-    return [];
-  });
+  }, []);
 
   const [savedListingIds, setSavedListingIds] = useState<string[]>(() => {
     if (typeof window !== 'undefined') {
@@ -226,32 +226,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const switchAccount = (userId: string) => {
-    const targetUser = savedAccounts.find(u => u.id === userId);
-    if (!targetUser) {
-      addToast('Account not found', 'Unable to find specified account', 'error');
-      return;
-    }
-    setUser(targetUser);
-    setRoleState(targetUser.role);
-    if (targetUser.role === 'student') setActiveView('student_dashboard');
-    else if (targetUser.role === 'agent') setActiveView('agent_dashboard');
-    else if (targetUser.role === 'admin') setActiveView('admin_dashboard');
-    addToast('Account Switched', `Now logged in as ${targetUser.name} (${targetUser.role})`, 'success');
+    // To switch accounts securely, sign out and prompt for Firebase authentication
+    logout();
+    setAuthModalTab('login');
+    setAuthModalOpen(true);
   };
 
   const deleteAccount = (userId: string) => {
-    const target = savedAccounts.find(u => u.id === userId);
-    const targetName = target ? target.name : 'Account';
-
-    setSavedAccounts(prev => prev.filter(u => u.id !== userId));
-
     if (user?.id === userId) {
-      setUser(null);
-      setRoleState('guest');
-      setActiveView('home');
-      addToast('Account Deleted', `${targetName} was permanently deleted. You are now in guest mode.`, 'warning');
-    } else {
-      addToast('Account Deleted', `${targetName} has been removed from saved accounts.`, 'info');
+      logout();
+      addToast('Account Signed Out', 'You have been signed out. To delete your account permanently, contact support.', 'info');
     }
   };
 
@@ -480,69 +464,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const setRole = (newRole: UserRole) => {
     setRoleState(newRole);
     if (newRole === 'guest') {
-      setUser(null);
-    } else if (newRole === 'student') {
-      const studentAcc = savedAccounts.find(a => a.role === 'student') || INITIAL_ACCOUNTS_PRESET[0];
-      setUser(studentAcc);
-      addToast('Switched Role to Student', `Browsing as student user ${studentAcc.name}`, 'info');
-    } else if (newRole === 'agent') {
-      const agentAcc = savedAccounts.find(a => a.role === 'agent') || INITIAL_ACCOUNTS_PRESET[1];
-      setUser(agentAcc);
-      addToast('Switched Role to Agent', `Logged in as property agent ${agentAcc.name}`, 'info');
-    } else if (newRole === 'admin') {
-      const adminAcc = savedAccounts.find(a => a.role === 'admin') || INITIAL_ACCOUNTS_PRESET[2];
-      setUser(adminAcc);
-      addToast('Switched Role to Admin', 'Accessing platform management dashboard', 'warning');
+      logout();
+    } else if (user) {
+      const updatedUser = { ...user, role: newRole };
+      setUser(updatedUser);
+      updateFirestoreUserProfile(user.id, { role: newRole }).catch(() => {});
+      addToast('Role Updated', `Switched role view to ${newRole}`, 'info');
+    } else {
+      setAuthModalTab(newRole === 'agent' ? 'agent_signup' : 'login');
+      setAuthModalOpen(true);
     }
   };
 
-  const login = (email: string, targetRole: UserRole, name?: string) => {
+  const login = (email: string, targetRole: UserRole) => {
     setRoleState(targetRole);
-    const existing = savedAccounts.find(a => a.email.toLowerCase() === email.toLowerCase());
-
-    if (existing) {
-      setUser(existing);
-      setRoleState(existing.role);
-      addToast('Logged In Successfully', `Welcome back, ${existing.name}!`, 'success');
-    } else {
-      const newUserId = `usr_${Date.now()}`;
-      const displayName = name || (targetRole === 'agent' ? 'Property Agent' : 'Student Scholar');
-      const newUserObj: User = {
-        id: newUserId,
-        email,
-        name: displayName,
-        role: targetRole,
-        isVerifiedAgent: targetRole === 'agent',
-        verificationStatus: targetRole === 'agent' ? 'verified' : 'none',
-        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
-        createdAt: new Date().toISOString(),
-      };
-
-      setUser(newUserObj);
-      setSavedAccounts(prev => [newUserObj, ...prev]);
-      addToast('Account Created & Added', `Welcome ${displayName}! Account added to profile accounts.`, 'success');
-    }
-
-    setAuthModalOpen(false);
-
-    if (targetRole === 'student') {
-      setActiveView('search');
-    } else if (targetRole === 'agent') {
-      setActiveView('agent_dashboard');
-    } else if (targetRole === 'admin') {
-      setActiveView('admin_dashboard');
-    }
-
-    const confirmNotif: NotificationItem = {
-      id: `notif_confirm_${Date.now()}`,
-      userId: email,
-      type: 'announcement',
-      title: 'Check Email to Confirm Account',
-      body: `A confirmation email has been sent to ${email}. Please check your inbox or spam folder to complete registration.`,
-      timestamp: new Date().toISOString(),
-      read: false,
-    };
-    setNotifications(prev => [confirmNotif, ...prev]);
+    setAuthModalTab('login');
+    setAuthModalOpen(true);
   };
 
   const logout = () => {

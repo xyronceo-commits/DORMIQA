@@ -127,35 +127,13 @@ if (typeof window !== 'undefined') {
 // ================= FIREBASE AUTHENTICATION & OAUTH =================
 
 export async function loginWithGoogle(preferredRole: UserRole = 'student'): Promise<FirebaseUser> {
-  let user: FirebaseUser | null = null;
-
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    user = result.user;
-  } catch (popupErr: any) {
-    console.warn('Firebase signInWithPopup error:', popupErr);
-    
-    // If popup fails due to auth/internal-error, domain authorization, or popup blocking in iframe sandbox:
-    if (auth.currentUser) {
-      user = auth.currentUser;
-    } else {
-      // Create a Google OAuth session object for iframe sandboxed testing
-      const defaultEmail = 'buildsafe247@gmail.com';
-      const fallbackUid = 'google_oauth_' + (Math.random().toString(36).substring(2, 10));
-      user = {
-        uid: fallbackUid,
-        email: defaultEmail,
-        displayName: 'Google Verified User',
-        photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
-        emailVerified: true,
-      } as any;
-    }
-  }
+  const result = await signInWithPopup(auth, googleProvider);
+  const user = result.user;
 
   if (!user) {
     throw new Error('Google OAuth authentication failed');
   }
-  
+
   // Create or update Firestore user document
   const userRef = doc(db, 'users', user.uid);
   try {
@@ -164,7 +142,7 @@ export async function loginWithGoogle(preferredRole: UserRole = 'student'): Prom
     if (!userDoc.exists()) {
       await setDoc(userRef, {
         id: user.uid,
-        email: user.email || 'buildsafe247@gmail.com',
+        email: user.email || '',
         name: user.displayName || 'Dormiqa User',
         role: preferredRole,
         avatar: user.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
@@ -174,7 +152,6 @@ export async function loginWithGoogle(preferredRole: UserRole = 'student'): Prom
         fcmToken: null,
       });
     } else if (preferredRole && userDoc.data()?.role !== preferredRole) {
-      // Merge role if user explicitly selected agent or student sign in/up
       await setDoc(userRef, { 
         role: preferredRole,
         isVerifiedAgent: preferredRole === 'agent' ? true : (userDoc.data()?.isVerifiedAgent || false)

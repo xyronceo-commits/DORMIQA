@@ -53,7 +53,7 @@ export const AdminDashboard: React.FC = () => {
             id: v.id,
             name: v.businessName || 'Independent Campus Agent',
             agentName: v.agentName || 'Agent',
-            email: v.agentEmail || 'agent@dormiqa.ng',
+            email: v.agentEmail || '',
             phone: v.phone || '+234 800 000 0000',
             uni: v.officeAddress || 'Campus Property Agent',
             docType: v.proofType?.toUpperCase() || 'OFFICE & IDENTITY DOC',

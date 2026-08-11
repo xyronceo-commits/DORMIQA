@@ -184,6 +184,7 @@ export const AuthModal: React.FC = () => {
       if (authModalTab === 'google_onboarding') {
         const chosenUni = INITIAL_UNIVERSITIES.find(u => u.id === universityId) || INITIAL_UNIVERSITIES[0];
         const updates: Partial<UserType> = {
+          email: email.trim() || user?.email || '',
           name: name.trim() || user?.name || 'Dormiqa User',
           role: googleRole,
           universityId: chosenUni.id,
@@ -439,6 +440,24 @@ export const AuthModal: React.FC = () => {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="e.g. Tunde Bakare"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Account Email Address */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="e.g. user@university.edu"
                       className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
                     />
                   </div>
