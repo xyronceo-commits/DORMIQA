@@ -77,6 +77,11 @@ service cloud.firestore {
       allow create, update, delete: if isAuthenticated();
     }
 
+    // Email Verifications Collection (OTPs managed via server API)
+    match /emailVerifications/{verificationId} {
+      allow read, write: if true;
+    }
+
     // Chat Messages Collection
     match /messages/{messageId} {
       allow read: if isAuthenticated();
