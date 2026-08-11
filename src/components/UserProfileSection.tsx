@@ -31,8 +31,7 @@ export const UserProfileSection: React.FC = () => {
   const [editUni, setEditUni] = useState(user?.universityName || '');
 
   // Delete Account Confirmation Modal State
-  const [accountToDeleteId, setAccountToDeleteId] = useState<string | null>(null);
-  const [deleteConfirmInput, setDeleteConfirmInput] = useState('');
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,8 +43,6 @@ export const UserProfileSection: React.FC = () => {
     });
     setIsEditing(false);
   };
-
-  const accountToDelete = savedAccounts.find(a => a.id === accountToDeleteId);
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
@@ -89,7 +86,7 @@ export const UserProfileSection: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => openVerificationModal(user.email)}
-                        className="px-2 py-0.5 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold shadow-xs transition-colors"
+                        className="px-2 py-0.5 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold shadow-xs transition-colors cursor-pointer"
                       >
                         Verify Email Status
                       </button>
@@ -109,7 +106,7 @@ export const UserProfileSection: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => {
                   setEditName(user.name);
@@ -118,16 +115,23 @@ export const UserProfileSection: React.FC = () => {
                   setEditUni(user.universityName || '');
                   setIsEditing(!isEditing);
                 }}
-                className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors flex items-center gap-1.5"
+                className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors flex items-center gap-1.5 cursor-pointer"
               >
                 <Edit3 className="w-3.5 h-3.5" /> {isEditing ? 'Cancel Edit' : 'Edit Profile'}
               </button>
 
               <button
                 onClick={logout}
-                className="px-3.5 py-2 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 text-xs font-bold hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-colors flex items-center gap-1.5 border border-rose-200 dark:border-rose-900/50"
+                className="px-3.5 py-2 rounded-xl bg-slate-100 text-slate-700 dark:bg-slate-700/60 dark:text-slate-200 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors flex items-center gap-1.5 border border-slate-200 dark:border-slate-600 cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" /> Sign Out
+              </button>
+
+              <button
+                onClick={() => setIsDeletingAccount(true)}
+                className="px-3.5 py-2 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 text-xs font-bold hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-colors flex items-center gap-1.5 border border-rose-200 dark:border-rose-900/50 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Delete Account
               </button>
             </div>
           </div>
@@ -236,135 +240,9 @@ export const UserProfileSection: React.FC = () => {
         </div>
       )}
 
-      {/* 2. Switch Accounts & Add Account Section (Agents/Admins Only) */}
-      {user?.role !== 'student' && (
-        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md space-y-5">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div>
-              <h3 className="font-extrabold text-base text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                Manage & Switch User Accounts
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Switch seamlessly between agent or admin user accounts saved on this device.
-              </p>
-            </div>
-
-            <button
-              onClick={() => {
-                setAuthModalTab('student_signup');
-                setAuthModalOpen(true);
-              }}
-              className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors"
-            >
-              <Plus className="w-4 h-4" /> Add Another Account
-            </button>
-          </div>
-
-          {/* Saved Accounts List */}
-          <div className="space-y-3">
-            {savedAccounts.map(acc => {
-              const isActive = user?.id === acc.id;
-              return (
-                <div
-                  key={acc.id}
-                  className={`p-4 rounded-2xl border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
-                    isActive
-                      ? 'border-emerald-500/80 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-sm'
-                      : 'border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-900/50 hover:bg-slate-100/60 dark:hover:bg-slate-800/80'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={acc.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'}
-                      alt={acc.name}
-                      className="w-11 h-11 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
-                    />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-xs text-slate-900 dark:text-slate-100">{acc.name}</span>
-                        <span className="px-2 py-0.2 rounded text-[9px] font-black uppercase bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                          {acc.role}
-                        </span>
-                        {isActive && (
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-extrabold tracking-wider uppercase">
-                            Active Now
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[11px] text-slate-500">{acc.email}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 self-end sm:self-center">
-                    {!isActive ? (
-                      <button
-                        onClick={() => switchAccount(acc.id)}
-                        className="px-3 py-1.5 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs font-bold hover:opacity-90 transition-opacity flex items-center gap-1"
-                      >
-                        <RefreshCw className="w-3.5 h-3.5" /> Switch Account
-                      </button>
-                    ) : (
-                      <button
-                        onClick={logout}
-                        className="px-3 py-1.5 rounded-xl bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200 text-xs font-bold hover:bg-slate-300 transition-colors flex items-center gap-1"
-                      >
-                        <LogOut className="w-3.5 h-3.5" /> Sign Out
-                      </button>
-                    )}
-
-                    <button
-                      onClick={() => {
-                        setAccountToDeleteId(acc.id);
-                        setDeleteConfirmInput('');
-                      }}
-                      className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors"
-                      title="Delete Account"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* 3. Delete Account Danger Zone Card */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-rose-50/40 dark:bg-rose-950/20 border-2 border-rose-200 dark:border-rose-900/60 shadow-sm space-y-4">
-        <div className="flex items-start gap-3">
-          <div className="p-2.5 rounded-2xl bg-rose-600 text-white shrink-0 shadow-md">
-            <AlertTriangle className="w-6 h-6" />
-          </div>
-          <div>
-            <h3 className="font-extrabold text-base text-rose-900 dark:text-rose-200">
-              Permanently Delete Account
-            </h3>
-            <p className="text-xs text-slate-600 dark:text-rose-300/80 mt-1 leading-relaxed">
-              Permanently remove your account profile from Dormiqa. This action is irreversible and will delete your saved hostel bookmarks, inspection schedules, and account preferences.
-            </p>
-          </div>
-        </div>
-
-        {user && (
-          <div className="pt-2 flex justify-end">
-            <button
-              onClick={() => {
-                setAccountToDeleteId(user.id);
-                setDeleteConfirmInput('');
-              }}
-              className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md transition-colors flex items-center gap-1.5"
-            >
-              <Trash2 className="w-4 h-4" /> Delete Active Account ({user.name})
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* 4. Delete Account Confirmation Modal */}
+      {/* Delete Account Confirmation Modal */}
       <AnimatePresence>
-        {accountToDeleteId && accountToDelete && (
+        {isDeletingAccount && user && (
           <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -373,8 +251,8 @@ export const UserProfileSection: React.FC = () => {
               className="bg-white dark:bg-slate-900 max-w-md w-full rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-5 relative"
             >
               <button
-                onClick={() => setAccountToDeleteId(null)}
-                className="absolute right-4 top-4 p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
+                onClick={() => setIsDeletingAccount(false)}
+                className="absolute right-4 top-4 p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -388,32 +266,32 @@ export const UserProfileSection: React.FC = () => {
                   Delete Account permanently?
                 </h3>
                 <p className="text-xs text-slate-500 mt-1">
-                  You are about to permanently delete <strong className="text-slate-900 dark:text-slate-100">{accountToDelete.name}</strong> ({accountToDelete.email}).
+                  You are about to permanently delete <strong className="text-slate-900 dark:text-slate-100">{user.name}</strong> ({user.email}).
                 </p>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 text-xs text-rose-800 dark:text-rose-300 space-y-1">
                 <p className="font-bold">⚠️ Warning: This action cannot be undone.</p>
                 <p className="text-[11px] text-rose-700 dark:text-rose-300/80">
-                  All stored hostel bookmarks, inspection passes, and profile records associated with this email will be wiped.
+                  All stored hostel bookmarks, inspection passes, and profile records associated with this account will be wiped.
                 </p>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2">
                 <button
                   type="button"
-                  onClick={() => setAccountToDeleteId(null)}
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800"
+                  onClick={() => setIsDeletingAccount(false)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={() => {
-                    deleteAccount(accountToDelete.id);
-                    setAccountToDeleteId(null);
+                    deleteAccount(user.id);
+                    setIsDeletingAccount(false);
                   }}
-                  className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md transition-colors flex items-center gap-1.5"
+                  className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" /> Confirm & Delete Account
                 </button>

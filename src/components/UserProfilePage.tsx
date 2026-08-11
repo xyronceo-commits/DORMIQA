@@ -266,10 +266,17 @@ export const UserProfilePage: React.FC = () => {
               <div className="shrink-0 flex sm:flex-col gap-2.5 w-full sm:w-auto">
                 <button
                   onClick={logout}
-                  className="flex-1 sm:flex-initial py-2.5 px-4 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-xs flex items-center justify-center gap-2 transition-all"
+                  className="flex-1 sm:flex-initial py-2.5 px-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                   Sign Out
+                </button>
+                <button
+                  onClick={() => setAccountToDelete(user)}
+                  className="flex-1 sm:flex-initial py-2.5 px-4 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Account
                 </button>
               </div>
             )}
@@ -494,9 +501,24 @@ export const UserProfilePage: React.FC = () => {
                     </div>
                     <button
                       onClick={() => resetPasswordFirebase(user.email)}
-                      className="px-3.5 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 font-bold text-xs border border-indigo-200 dark:border-indigo-800 transition-colors"
+                      className="px-3.5 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 font-bold text-xs border border-indigo-200 dark:border-indigo-800 transition-colors cursor-pointer"
                     >
                       Reset Password
+                    </button>
+                  </div>
+
+                  {/* Delete Account Section */}
+                  <div className="md:col-span-2 pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold text-rose-600 dark:text-rose-400">Permanently Remove Account</p>
+                      <p className="text-[11px] text-slate-500">Delete your profile, saved hostels, and account records.</p>
+                    </div>
+                    <button
+                      onClick={() => setAccountToDelete(user)}
+                      className="px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 text-rose-700 dark:text-rose-300 font-bold text-xs border border-rose-200 dark:border-rose-900 transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Delete Account
                     </button>
                   </div>
                 </div>
