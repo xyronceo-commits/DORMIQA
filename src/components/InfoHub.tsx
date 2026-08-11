@@ -131,7 +131,7 @@ export const InfoHub: React.FC<InfoHubProps> = ({ initialDocId = 'terms-and-cond
         <div className="max-w-3xl space-y-4 relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider">
             <Building2 className="w-3.5 h-3.5" />
-            <span>Campora Knowledge Base & Legal Documentation</span>
+            <span>Dormiqa Knowledge Base & Legal Documentation</span>
           </div>
 
           <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
@@ -248,10 +248,10 @@ export const InfoHub: React.FC<InfoHubProps> = ({ initialDocId = 'terms-and-cond
               Have questions regarding agent verification, terms, or incident reports? Our safety team responds within 24 hours.
             </p>
             <a
-              href="mailto:support@campora.ng"
+              href="mailto:support@dormiqa.ng"
               className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold hover:underline text-[11px]"
             >
-              <span>Email support@campora.ng</span>
+              <span>Email support@dormiqa.ng</span>
               <ArrowRight className="w-3 h-3" />
             </a>
           </div>
@@ -314,10 +314,10 @@ export const InfoHub: React.FC<InfoHubProps> = ({ initialDocId = 'terms-and-cond
             <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs space-y-1.5">
               <div className="flex items-center gap-2 font-bold">
                 <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                <span>Campora Technology Platform Notice</span>
+                <span>Dormiqa Technology Platform Notice</span>
               </div>
               <p className="leading-relaxed font-normal text-[11px] text-amber-800 dark:text-amber-300">
-                Campora is an independent technology search platform connecting students with verified property agents. Campora does not own, rent, manage, or collect rental fees for properties. All tenancy agreements and financial payments occur directly between students and verified agents following physical inspections.
+                Dormiqa is an independent technology search platform connecting students with verified property agents. Dormiqa does not own, rent, manage, or collect rental fees for properties. All tenancy agreements and financial payments occur directly between students and verified agents following physical inspections.
               </p>
             </div>
 
@@ -355,7 +355,7 @@ export const InfoHub: React.FC<InfoHubProps> = ({ initialDocId = 'terms-and-cond
                   </button>
                 )}
                 <a
-                  href="mailto:legal@campora.ng"
+                  href="mailto:legal@dormiqa.ng"
                   className="px-4 py-2 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-xs hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
                 >
                   Contact Legal Team

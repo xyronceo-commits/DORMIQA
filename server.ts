@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import {
@@ -118,6 +119,7 @@ async function startServer() {
   // Initialize Gemini Client
   const getGeminiClient = () => {
     const candidateKeys = [
+      process.env.DORMIQA_API_KEY,
       process.env.CAMPORANG_API_KEY,
       process.env.GEMINI_API_KEY,
       process.env.CAMPORA_API_KEY,
@@ -157,7 +159,7 @@ async function startServer() {
 
   // REST API Routes
   app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", appName: "Campora", version: "1.0.0" });
+    res.json({ status: "ok", appName: "Dormiqa", version: "1.0.0" });
   });
 
   // Universities
@@ -279,9 +281,9 @@ async function startServer() {
       video360Url: sanitizeInput(req.body.video360Url || req.body.videoUrl, 500) || "",
       accommodationTypeName: sanitizeInput(req.body.accommodationTypeName, 100) || "Student Accommodation",
       agentId: sanitizeInput(req.body.agentId, 50) || "agent_001",
-      agentName: sanitizeInput(req.body.agentName, 100) || "Campora Verified Agent",
+      agentName: sanitizeInput(req.body.agentName, 100) || "Dormiqa Verified Agent",
       agentPhone: sanitizeInput(req.body.agentPhone, 30) || "+234 800 000 0000",
-      agentEmail: sanitizeInput(req.body.agentEmail, 100) || "agent@campora.africa",
+      agentEmail: sanitizeInput(req.body.agentEmail, 100) || "agent@dormiqa.africa",
       agentAvatar: sanitizeInput(req.body.agentAvatar, 500) || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
       isAgentVerified: Boolean(req.body.isAgentVerified),
       isFeatured: false,
@@ -390,7 +392,7 @@ async function startServer() {
       studentId: sanitizeInput(req.body.studentId, 50) || "stud_current",
       studentName: sanitizeInput(req.body.studentName, 100) || "Student User",
       studentPhone: sanitizeInput(req.body.studentPhone, 30) || "+234 810 000 0000",
-      studentEmail: sanitizeInput(req.body.studentEmail, 100) || "student@campora.africa",
+      studentEmail: sanitizeInput(req.body.studentEmail, 100) || "student@dormiqa.africa",
       agentId: sanitizeInput(req.body.agentId, 50) || "agent_001",
       agentName: sanitizeInput(req.body.agentName, 100) || "Agent",
       agentPhone: sanitizeInput(req.body.agentPhone, 30) || "+234 800 000 0000",
@@ -526,7 +528,7 @@ async function startServer() {
       id: `verif_${Date.now()}`,
       agentId: sanitizeInput(req.body.agentId, 50) || "agent_curr",
       agentName: sanitizeInput(req.body.agentName, 100) || "Agent",
-      agentEmail: sanitizeInput(req.body.agentEmail, 100) || "agent@campora.africa",
+      agentEmail: sanitizeInput(req.body.agentEmail, 100) || "agent@dormiqa.africa",
       businessName: sanitizeInput(req.body.businessName, 150) || "Property Agent",
       proofType: (sanitizeInput(req.body.proofType, 50) || "banner") as "banner" | "logo" | "office_photo" | "cac" | "other",
       proofUrl: sanitizeInput(req.body.proofUrl, 500) || "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80",
@@ -596,6 +598,7 @@ async function startServer() {
       process.env.LLM_API_KEY,
       process.env.OPENROUTER_API_KEY,
       process.env.OPENAI_API_KEY,
+      process.env.DORMIQA_API_KEY,
       process.env.CAMPORANG_API_KEY,
       process.env.CAMPORA_API_KEY,
       process.env.GEMINI_API_KEY, // Check if user set Groq key in secrets panel
@@ -735,8 +738,8 @@ async function startServer() {
             headers: {
               "Content-Type": "application/json",
               "Authorization": `Bearer ${apiKey}`,
-              "HTTP-Referer": "https://campora.africa",
-              "X-Title": "Campora Student Housing",
+              "HTTP-Referer": "https://dormiqa.africa",
+              "X-Title": "Dormiqa Student Housing",
             },
             body: JSON.stringify(body),
           });
@@ -791,7 +794,7 @@ async function startServer() {
         description: l.description
       }));
 
-      const systemInstruction = `You are Campora's intelligent African student housing search AI powered by Groq. 
+      const systemInstruction = `You are Dormiqa's intelligent African student housing search AI powered by Groq. 
 Analyze the user's natural language request and match them with the best listings from our available database.
 Always respond in strict valid JSON with the following structure:
 {
@@ -846,7 +849,7 @@ ${JSON.stringify(listingSummary, null, 2)}`;
     }
   });
 
-  // 2. AI Chatbot (Campora Student Assistant - Powered by Groq AI)
+  // 2. AI Chatbot (Dormiqa Student Assistant - Powered by Groq AI)
   app.post("/api/gemini/chat", aiApiRateLimiter, async (req, res) => {
     try {
       const { message: rawMsg, history: rawHistory } = req.body;
@@ -857,12 +860,12 @@ ${JSON.stringify(listingSummary, null, 2)}`;
       const message = sanitizeAiPrompt(rawMsg, 1000);
       const history = Array.isArray(rawHistory) ? rawHistory.slice(-10) : [];
 
-      const systemInstruction = `You are Campora AI - the ultimate African Student Accommodation Assistant powered by Groq AI.
+      const systemInstruction = `You are Dormiqa AI - the ultimate African Student Accommodation Assistant powered by Groq AI.
 Your job is to assist university students with:
 - Finding verified accommodation near African universities (UNILAG, UON, UCT, KNUST, Makerere, Covenant, etc.)
 - Safety advice (checking verified badges, inspecting properties before paying rent)
 - Understanding hostel rules, generator/solar power setups, water supply, and security
-- How to schedule free physical inspections through Campora
+- How to schedule free physical inspections through Dormiqa
 Keep your tone friendly, encouraging, knowledgeable, student-centric, and concise.
 
 CRITICAL OUTPUT RULES:
@@ -894,11 +897,11 @@ If presenting tabular or comparative data, output clean HTML <table> elements wi
       }
 
       return res.json({
-        reply: "Hello! I am Campora AI Assistant. I can help you find verified student hostels near UNILAG, UON, UCT, KNUST, and other top African campuses, guide you on free physical inspections, and answer safety questions. How can I assist you today?"
+        reply: "Hello! I am Dormiqa AI Assistant. I can help you find verified student hostels near UNILAG, UON, UCT, KNUST, and other top African campuses, guide you on free physical inspections, and answer safety questions. How can I assist you today?"
       });
     } catch (err: any) {
       res.json({
-        reply: "Hello! I am Campora AI Assistant. How can I help you with student accommodation search or hostel inspections today?"
+        reply: "Hello! I am Dormiqa AI Assistant. How can I help you with student accommodation search or hostel inspections today?"
       });
     }
   });
@@ -916,7 +919,7 @@ If presenting tabular or comparative data, output clean HTML <table> elements wi
     const fallbackDescription = `Modern ${type || "student apartment"} located near ${universityName || "campus"}. Features include ${facilities && facilities.length ? facilities.join(", ") : "24/7 water supply, electricity, and verified security"}. Ideal for students looking for comfort and convenience.`;
 
     try {
-      const prompt = `Write a compelling, professional, student-friendly property description for a Campora listing:
+      const prompt = `Write a compelling, professional, student-friendly property description for a Dormiqa listing:
 - Accommodation Name: ${title || "Student Residence"}
 - University: ${universityName || "University"}
 - Type: ${type || "Self-Contain"}
@@ -1050,7 +1053,7 @@ ${JSON.stringify(existingData, null, 2)}` }
       const replyText = await callCustomLlmApi({
         model: "llama-3.3-70b-versatile",
         messages: [
-          { role: "system", content: `You are Campora AI Listing Auditor for Nigerian Student Housing.
+          { role: "system", content: `You are Dormiqa AI Listing Auditor for Nigerian Student Housing.
 Audit the new listing for:
 1. Duplicate or multiple listings (same address or same title or copy-pasted details).
 2. Suspicious spam or inappropriate wording.
@@ -1090,14 +1093,14 @@ ${JSON.stringify(existingData.slice(0, 15), null, 2)}` }
       res.json({
         approved: true,
         status: "active",
-        reason: "Listing verified and approved by Campora AI.",
+        reason: "Listing verified and approved by Dormiqa AI.",
         riskScore: 0
       });
     } catch (err: any) {
       res.json({
         approved: true,
         status: "active",
-        reason: "Listing verified and approved by Campora AI.",
+        reason: "Listing verified and approved by Dormiqa AI.",
         riskScore: 0
       });
     }
@@ -1110,7 +1113,7 @@ ${JSON.stringify(existingData.slice(0, 15), null, 2)}` }
       const proofType = sanitizeInput(req.body.proofType, 50);
       const officeAddress = sanitizeInput(req.body.officeAddress, 200);
 
-      const systemInstruction = `You are Campora's automated AI Business Verification Officer for African student housing.
+      const systemInstruction = `You are Dormiqa's automated AI Business Verification Officer for African student housing.
 Evaluate the agency business details provided by a property manager/agent.
 Checks to perform:
 - Credibility and appropriateness of Business / Agency Name (${businessName})
@@ -1186,7 +1189,7 @@ Office Address: ${officeAddress || 'Not provided'}`,
         isValid: true,
         riskScore: 5,
         confidence: 95,
-        verifiedBadgeTitle: "Campora Verified Agent",
+        verifiedBadgeTitle: "Dormiqa Verified Agent",
         reason: "Credentials meet format standards. Instant agent badge granted."
       });
     } catch (err: any) {
@@ -1194,9 +1197,280 @@ Office Address: ${officeAddress || 'Not provided'}`,
         isValid: true,
         riskScore: 10,
         confidence: 85,
-        verifiedBadgeTitle: "Campora Agent",
+        verifiedBadgeTitle: "Dormiqa Agent",
         reason: "Verification submitted successfully."
       });
+    }
+  });
+
+  // ==========================================
+  // SECURE ADMIN ACCESS & AUTHENTICATION APIs
+  // ==========================================
+  const adminSessions = new Map<string, { createdAt: number; expiresAt: number }>();
+
+  // Rate Limiter for Admin Login Attempts (5 attempts per 15 minutes)
+  const adminLoginRateLimiter = createRateLimiter({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    message: "Too many security access attempts. Please wait 15 minutes before trying again."
+  });
+
+  // Admin Password Login Endpoint
+  app.post("/api/admin/login", adminLoginRateLimiter, (req, res) => {
+    try {
+      const { password } = req.body;
+      const expectedPassword = process.env.ADMIN_PASSWORD || "Dormiqa26/27";
+
+      if (!password || password !== expectedPassword) {
+        return res.status(401).json({ 
+          success: false, 
+          error: "Invalid access password. Entry denied." 
+        });
+      }
+
+      // Generate a secure admin session token
+      const token = `dormiqa_admin_session_${Date.now()}_${Math.random().toString(36).substring(2, 12)}`;
+      const expiresAt = Date.now() + 4 * 60 * 60 * 1000; // 4 hour session expiry
+      adminSessions.set(token, { createdAt: Date.now(), expiresAt });
+
+      return res.json({
+        success: true,
+        token,
+        expiresAt,
+        adminUser: {
+          id: "admin_001",
+          name: "Dormiqa Platform Admin",
+          email: "admin@dormiqa.africa",
+          role: "admin",
+          avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80"
+        }
+      });
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: "Authentication system error" });
+    }
+  });
+
+  // Admin Session Verification
+  app.post("/api/admin/verify", (req, res) => {
+    const authHeader = req.headers.authorization;
+    const token = authHeader ? authHeader.replace("Bearer ", "") : req.body.token;
+
+    if (!token) return res.status(401).json({ valid: false, error: "No token provided" });
+
+    const session = adminSessions.get(token);
+    if (!session || Date.now() > session.expiresAt) {
+      if (session) adminSessions.delete(token);
+      return res.status(401).json({ valid: false, error: "Session expired or invalid" });
+    }
+
+    return res.json({ valid: true, expiresAt: session.expiresAt });
+  });
+
+  // Admin Logout Endpoint
+  app.post("/api/admin/logout", (req, res) => {
+    const token = req.headers.authorization?.replace("Bearer ", "") || req.body.token;
+    if (token && adminSessions.has(token)) {
+      adminSessions.delete(token);
+    }
+    return res.json({ success: true });
+  });
+
+  // Admin Dashboard Comprehensive Statistics
+  app.get("/api/admin/stats", (req, res) => {
+    const authHeader = req.headers.authorization;
+    const token = authHeader ? authHeader.replace("Bearer ", "") : (req.query.token as string);
+
+    if (!token || !adminSessions.has(token) || Date.now() > adminSessions.get(token)!.expiresAt) {
+      return res.status(401).json({ error: "Unauthorized admin access" });
+    }
+
+    const activeListingsCount = listings.filter(l => l.status === 'active').length;
+    const pendingVerificationsCount = verifications.filter(v => v.status === 'pending').length;
+    const verifiedVerificationsCount = verifications.filter(v => v.status === 'verified').length;
+    const totalVerificationsCount = verifications.length;
+    const verifRate = totalVerificationsCount > 0 
+      ? `${Math.round((verifiedVerificationsCount / totalVerificationsCount) * 100)}%` 
+      : "0%";
+
+    return res.json({
+      students: {
+        total: 0,
+        newToday: 0,
+        newThisWeek: 0,
+        newThisMonth: 0,
+        byUniversity: []
+      },
+      agents: {
+        pendingCount: pendingVerificationsCount,
+        verifiedCount: verifiedVerificationsCount,
+      },
+      activeListingsCount,
+      verificationRate: verifRate,
+      analytics: {
+        demandByRoomType: [],
+        monthlySignups: [],
+        topRequestedUniversities: []
+      }
+    });
+  });
+
+  // ==========================================
+  // SECURE 6-DIGIT VERIFICATION CODE SYSTEM
+  // ==========================================
+  interface VerificationRecord {
+    codeHash: string;
+    expiresAt: number; // 10 minutes from creation
+    attempts: number;  // Max 5 attempts allowed
+    lastSentAt: number;
+  }
+
+  const verificationCodesStore = new Map<string, VerificationRecord>();
+
+  // Helper: Securely hash OTP with user email
+  function hashOtpCode(email: string, code: string): string {
+    return crypto.createHash("sha256").update(`${email.trim().toLowerCase()}:${code.trim()}`).digest("hex");
+  }
+
+  // Rate Limiter for sending verification codes (max 10 requests per 15 minutes)
+  const sendVerificationRateLimiter = createRateLimiter({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    message: "Too many verification requests. Please wait a few minutes before trying again."
+  });
+
+  // Endpoint: Send 6-digit Verification Code
+  app.post("/api/auth/send-verification", sendVerificationRateLimiter, (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email || typeof email !== "string" || !email.includes("@")) {
+        return res.status(400).json({ success: false, error: "A valid email address is required." });
+      }
+
+      const normalizedEmail = email.trim().toLowerCase();
+      const existing = verificationCodesStore.get(normalizedEmail);
+
+      // Prevent rapid resend within 60 seconds (Resend Cooldown)
+      if (existing && Date.now() - existing.lastSentAt < 60000) {
+        const waitSec = Math.ceil((60000 - (Date.now() - existing.lastSentAt)) / 1000);
+        return res.status(429).json({
+          success: false,
+          error: `Please wait ${waitSec} seconds before requesting a new code.`
+        });
+      }
+
+      // Generate random 6-digit verification code
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const codeHash = hashOtpCode(normalizedEmail, code);
+      const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes expiry
+
+      // Save/override in server-side memory (invalidates previous code)
+      // OTP is stored ONLY as a secure SHA256 hash
+      verificationCodesStore.set(normalizedEmail, {
+        codeHash,
+        expiresAt,
+        attempts: 0,
+        lastSentAt: Date.now()
+      });
+
+      // Clear Email Dispatch Log for Developer / Preview Environment
+      console.log(`\n==================================================`);
+      console.log(`[DORMIQA EMAIL DISPATCH]`);
+      console.log(`To: ${normalizedEmail}\n`);
+      console.log(`DORMIQA\n`);
+      console.log(`Verify your email\n`);
+      console.log(`Your verification code is:\n`);
+      console.log(`${code}\n`);
+      console.log(`This code expires in 10 minutes.\n`);
+      console.log(`If you didn't request this code, you can ignore this email.`);
+      console.log(`==================================================\n`);
+
+      // Return response without exposing the OTP in API payload
+      return res.json({
+        success: true,
+        message: `6-digit verification code sent to ${normalizedEmail}`,
+        expiresAt
+      });
+    } catch (err: any) {
+      console.error("Error sending verification code:", err);
+      return res.status(500).json({ success: false, error: "Failed to dispatch verification code." });
+    }
+  });
+
+  // Endpoint: Verify 6-digit Verification Code
+  app.post("/api/auth/verify-code", (req, res) => {
+    try {
+      const { email, code } = req.body;
+
+      if (!email || typeof email !== "string") {
+        return res.status(400).json({ success: false, error: "Email is required." });
+      }
+
+      if (!code || typeof code !== "string" || code.trim().length !== 6) {
+        return res.status(400).json({ success: false, error: "Please enter a valid 6-digit code." });
+      }
+
+      const normalizedEmail = email.trim().toLowerCase();
+      const cleanCode = code.trim();
+      const record = verificationCodesStore.get(normalizedEmail);
+
+      // Check if code exists
+      if (!record) {
+        return res.status(400).json({
+          success: false,
+          error: "No verification code found for this email. Please request a new code."
+        });
+      }
+
+      // Check if expired (10 minutes)
+      if (Date.now() > record.expiresAt) {
+        verificationCodesStore.delete(normalizedEmail);
+        return res.status(400).json({
+          success: false,
+          expired: true,
+          error: "This code has expired. Request a new code."
+        });
+      }
+
+      // Check if maximum attempts reached (5 attempts)
+      if (record.attempts >= 5) {
+        verificationCodesStore.delete(normalizedEmail);
+        return res.status(400).json({
+          success: false,
+          expired: true,
+          error: "Too many incorrect attempts. Code invalidated. Please request a new code."
+        });
+      }
+
+      // Hash input and compare with stored codeHash
+      const inputHash = hashOtpCode(normalizedEmail, cleanCode);
+
+      if (inputHash !== record.codeHash) {
+        record.attempts += 1;
+        if (record.attempts >= 5) {
+          verificationCodesStore.delete(normalizedEmail);
+          return res.status(400).json({
+            success: false,
+            expired: true,
+            error: "Too many incorrect attempts. Code invalidated. Please request a new code."
+          });
+        }
+        const remaining = 5 - record.attempts;
+        return res.status(400).json({
+          success: false,
+          error: `Incorrect verification code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`
+        });
+      }
+
+      // Code is correct -> delete immediately so it CANNOT be reused
+      verificationCodesStore.delete(normalizedEmail);
+
+      return res.json({
+        success: true,
+        message: "Email address verified successfully!"
+      });
+    } catch (err: any) {
+      console.error("Error verifying code:", err);
+      return res.status(500).json({ success: false, error: "Verification system error." });
     }
   });
 
@@ -1219,7 +1493,7 @@ Office Address: ${officeAddress || 'Not provided'}`,
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
       try {
-        const host = req.get('x-forwarded-host') || req.get('host') || 'campora.app';
+        const host = req.get('x-forwarded-host') || req.get('host') || 'dormiqa.app';
         const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
         const baseUrl = `${protocol}://${host}`;
         const currentUrl = `${baseUrl}${req.originalUrl || ''}`;
@@ -1242,7 +1516,7 @@ Office Address: ${officeAddress || 'Not provided'}`,
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Campora Express server running on http://0.0.0.0:${PORT}`);
+    console.log(`Dormiqa Express server running on http://0.0.0.0:${PORT}`);
   });
 }
 

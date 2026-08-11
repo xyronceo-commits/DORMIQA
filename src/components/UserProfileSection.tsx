@@ -20,6 +20,7 @@ export const UserProfileSection: React.FC = () => {
     setAuthModalTab,
     resendVerificationEmail,
     checkVerificationStatus,
+    openVerificationModal,
     addToast
   } = useAuth();
 
@@ -87,17 +88,10 @@ export const UserProfileSection: React.FC = () => {
                       </span>
                       <button
                         type="button"
-                        onClick={() => resendVerificationEmail()}
-                        className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                        onClick={() => openVerificationModal(user.email)}
+                        className="px-2 py-0.5 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold shadow-xs transition-colors"
                       >
-                        Resend Link
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => checkVerificationStatus()}
-                        className="text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:underline"
-                      >
-                        Check Status
+                        Enter 6-Digit Code
                       </button>
                     </div>
                   )}
@@ -348,7 +342,7 @@ export const UserProfileSection: React.FC = () => {
               Permanently Delete Account
             </h3>
             <p className="text-xs text-slate-600 dark:text-rose-300/80 mt-1 leading-relaxed">
-              Permanently remove your account profile from Campora. This action is irreversible and will delete your saved hostel bookmarks, inspection schedules, and account preferences.
+              Permanently remove your account profile from Dormiqa. This action is irreversible and will delete your saved hostel bookmarks, inspection schedules, and account preferences.
             </p>
           </div>
         </div>

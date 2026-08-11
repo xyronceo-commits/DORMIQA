@@ -1,6 +1,6 @@
 import React from 'react';
 
-interface CamporaLogoProps {
+export interface DormiqaLogoProps {
   variant?: 'full' | 'icon';
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   showSubtext?: boolean;
@@ -10,7 +10,7 @@ interface CamporaLogoProps {
   textColor?: string;
 }
 
-export const CamporaLogo: React.FC<CamporaLogoProps> = ({
+export const DormiqaLogo: React.FC<DormiqaLogoProps> = ({
   variant = 'full',
   size = 'md',
   showSubtext = true,
@@ -19,7 +19,6 @@ export const CamporaLogo: React.FC<CamporaLogoProps> = ({
   roofColor = '#ffffff',
   textColor
 }) => {
-  // Sizing definitions
   const iconSizes = {
     xs: 'w-6 h-6',
     sm: 'w-8 h-8',
@@ -102,7 +101,7 @@ export const CamporaLogo: React.FC<CamporaLogoProps> = ({
               textColor || 'text-black dark:text-white'
             }`}
           >
-            CAMPORA
+            DORMIQA
           </span>
           {showSubtext && (
             <span
@@ -116,3 +115,5 @@ export const CamporaLogo: React.FC<CamporaLogoProps> = ({
     </div>
   );
 };
+
+export const CamporaLogo = DormiqaLogo;

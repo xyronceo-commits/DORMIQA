@@ -38,15 +38,15 @@ export const SUPPORT_DOCS: InfoDoc[] = [
     iconName: 'MessageSquare',
     sections: [
       {
-        title: 'Q: Does Campora charge students for searching or inspecting properties?',
+        title: 'Q: Does Dormiqa charge students for searching or inspecting properties?',
         content: [
-          'A: No! Searching listings, bookmarking properties, and requesting inspection appointments on Campora is 100% free for students.'
+          'A: No! Searching listings, bookmarking properties, and requesting inspection appointments on Dormiqa is 100% free for students.'
         ]
       },
       {
-        title: 'Q: Do I pay rent to Campora or directly to the landlord/agent?',
+        title: 'Q: Do I pay rent to Dormiqa or directly to the landlord/agent?',
         content: [
-          'A: Rent payments are made DIRECTLY to the landlord or verified agent after you have physically inspected the property and agreed on tenancy terms. Campora NEVER collects, holds, or processes rent payments.'
+          'A: Rent payments are made DIRECTLY to the landlord or verified agent after you have physically inspected the property and agreed on tenancy terms. Dormiqa NEVER collects, holds, or processes rent payments.'
         ]
       },
       {
@@ -58,13 +58,13 @@ export const SUPPORT_DOCS: InfoDoc[] = [
       {
         title: 'Q: What should I do if an agent asks for money before physical viewing?',
         content: [
-          'A: DO NOT PAY. Report the agent immediately using the "Report Listing" button or email abuse@campora.ng. Demanding inspection fees prior to viewing violates Campora policy.'
+          'A: DO NOT PAY. Report the agent immediately using the "Report Listing" button or email abuse@dormiqa.ng. Demanding inspection fees prior to viewing violates Dormiqa policy.'
         ]
       },
       {
-        title: 'Q: Which universities and campuses does Campora cover?',
+        title: 'Q: Which universities and campuses does Dormiqa cover?',
         content: [
-          'A: Campora covers major federal, state, and private universities, polytechnics, and colleges across Nigeria (including UNILAG, OAU, UI, UNN, ABU, FUTA, UNILORIN, Covenant, LASU) with ongoing expansion across Ghana, Kenya, and South Africa.'
+          'A: Dormiqa covers major federal, state, and private universities, polytechnics, and colleges across Nigeria (including UNILAG, OAU, UI, UNN, ABU, FUTA, UNILORIN, Covenant, LASU) with ongoing expansion across Ghana, Kenya, and South Africa.'
         ]
       }
     ]
@@ -80,17 +80,17 @@ export const SUPPORT_DOCS: InfoDoc[] = [
       {
         title: 'General Support & Inquiries',
         content: [
-          'Email: support@campora.ng',
-          'Phone / WhatsApp Support: +234 800 CAMPORA (+234 800 226 7672)',
+          'Email: support@dormiqa.ng',
+          'Phone / WhatsApp Support: +234 800 DORMIQA (+234 800 367 6472)',
           'Operating Hours: Monday – Saturday, 8:00 AM – 8:00 PM WAT'
         ]
       },
       {
         title: 'Safety, Fraud & Legal Escalations',
         content: [
-          'Safety & Fraud Response: abuse@campora.ng | safety@campora.ng',
-          'Legal & Compliance: legal@campora.ng',
-          'Data Protection Officer: dpo@campora.ng'
+          'Safety & Fraud Response: abuse@dormiqa.ng | safety@dormiqa.ng',
+          'Legal & Compliance: legal@dormiqa.ng',
+          'Data Protection Officer: dpo@dormiqa.ng'
         ]
       },
       {
@@ -113,13 +113,13 @@ export const SUPPORT_DOCS: InfoDoc[] = [
       {
         title: '1. Technical Bug Reports',
         content: [
-          'If you experience app crashes, missing search filters, or photo loading issues, please contact tech@campora.ng with your device model and screenshot details.'
+          'If you experience app crashes, missing search filters, or photo loading issues, please contact tech@dormiqa.ng with your device model and screenshot details.'
         ]
       },
       {
         title: '2. Account Access & Password Reset',
         content: [
-          'Having trouble signing in or verifying your email? Use the "Forgot Password" link on the sign-in modal or contact support@campora.ng for fast assistance.'
+          'Having trouble signing in or verifying your email? Use the "Forgot Password" link on the sign-in modal or contact support@dormiqa.ng for fast assistance.'
         ]
       }
     ]

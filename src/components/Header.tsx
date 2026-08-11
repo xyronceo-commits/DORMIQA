@@ -4,7 +4,7 @@ import { useTheme } from '../context/ThemeContext';
 import { INITIAL_UNIVERSITIES } from '../data/mockData';
 import { UserRole } from '../types';
 import { NotificationCenter } from './NotificationCenter';
-import { CamporaLogo } from './CamporaLogo';
+import { DormiqaLogo } from './DormiqaLogo';
 import { 
   Building2, GraduationCap, Search, Bookmark, Bell, Sun, Moon, Laptop, User as UserIcon, 
   ChevronDown, ShieldCheck, FileText, LogOut, Sparkles, Menu, X, Check,
@@ -32,7 +32,8 @@ export const Header: React.FC = () => {
     agentActiveTab,
     setAgentActiveTab,
     setProfileModalOpen,
-    requestNotificationPermission
+    requestNotificationPermission,
+    setIsAdminModalOpen
   } = useAuth();
 
   const { theme, effectiveTheme, toggleTheme, setTheme } = useTheme();
@@ -57,7 +58,7 @@ export const Header: React.FC = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isVerticalNavOpen, setIsVerticalNavOpen] = useState(false);
 
-  // If user is on landing page or onboarding page (or not signed in), show header consisting ONLY of logo
+  // If user is on landing page or onboarding page (or not signed in), show header consisting ONLY of logo and discreet secure access button
   if (!user || activeView === 'home' || activeView === 'role_select' || activeView === 'onboarding') {
     return (
       <header className="sticky top-0 z-50 w-full bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800">
@@ -66,7 +67,15 @@ export const Header: React.FC = () => {
             onClick={() => setActiveView('home')}
             className="focus:outline-none group text-left"
           >
-            <CamporaLogo size="md" />
+            <DormiqaLogo size="md" />
+          </button>
+          <button
+            onClick={() => setIsAdminModalOpen(true)}
+            title="Secure access"
+            aria-label="Secure access"
+            className="p-2 rounded-xl text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors"
+          >
+            <ShieldCheck className="w-4 h-4 opacity-70 hover:opacity-100 transition-opacity" />
           </button>
         </div>
       </header>
@@ -83,7 +92,7 @@ export const Header: React.FC = () => {
             onClick={() => setActiveView('home')}
             className="focus:outline-none group text-left"
           >
-            <CamporaLogo size="md" />
+            <DormiqaLogo size="md" />
           </button>
 
           {/* University Picker Dropdown */}
@@ -228,7 +237,7 @@ export const Header: React.FC = () => {
                   <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Navigation</span>
                     <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[9px] font-bold">
-                      Campora
+                      Dormiqa
                     </span>
                   </div>
 
@@ -446,6 +455,16 @@ export const Header: React.FC = () => {
           </div>
 
 
+
+          {/* Discreet Secure Access Icon */}
+          <button
+            onClick={() => setIsAdminModalOpen(true)}
+            title="Secure access"
+            aria-label="Secure access"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+          >
+            <ShieldCheck className="w-4 h-4 opacity-70 hover:opacity-100 transition-opacity text-slate-500 dark:text-slate-400" />
+          </button>
 
           {/* User Profile / Login Button */}
           {user ? (

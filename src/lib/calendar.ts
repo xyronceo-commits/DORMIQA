@@ -31,8 +31,8 @@ export function getGoogleCalendarUrl(event: {
 
   const params = new URLSearchParams({
     action: 'TEMPLATE',
-    text: `[Campora Hostel Inspection] ${event.title}`,
-    details: `${event.description}\n\nBooked via Campora Housing Platform.`,
+    text: `[Dormiqa Hostel Inspection] ${event.title}`,
+    details: `${event.description}\n\nBooked via Dormiqa Housing Platform.`,
     location: event.location,
     dates: `${startIso}/${endIso}`,
   });
@@ -71,9 +71,9 @@ export function downloadIcsFile(event: {
   const icsData = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Campora//Hostel Inspection Calendar//EN',
+    'PRODID:-//Dormiqa//Hostel Inspection Calendar//EN',
     'BEGIN:VEVENT',
-    `SUMMARY:Campora Inspection: ${event.title}`,
+    `SUMMARY:Dormiqa Inspection: ${event.title}`,
     `DESCRIPTION:${event.description.replace(/\n/g, '\\n')}`,
     `LOCATION:${event.location}`,
     `DTSTART:${startIso}`,

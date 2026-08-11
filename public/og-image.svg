@@ -46,11 +46,11 @@
     <text x='115' y='23' font-family='system-ui, -apple-system, sans-serif' font-weight='800' font-size='13' fill='#34d399' text-anchor='middle' letter-spacing='1.5'>VERIFIED STUDENT HOUSING</text>
     
     <!-- Main Title -->
-    <text x='0' y='95' font-family='system-ui, -apple-system, sans-serif' font-weight='900' font-size='68' fill='#ffffff' letter-spacing='2'>Campora</text>
+    <text x='0' y='95' font-family='system-ui, -apple-system, sans-serif' font-weight='900' font-size='68' fill='#ffffff' letter-spacing='2'>Dormiqa</text>
     
     <!-- Tagline / Description -->
-    <text x='0' y='145' font-family='system-ui, -apple-system, sans-serif' font-weight='500' font-size='22' fill='#94a3b8'>Discover, compare, and book verified hostels</text>
-    <text x='0' y='178' font-family='system-ui, -apple-system, sans-serif' font-weight='500' font-size='22' fill='#94a3b8'>&amp; apartments near your campus with ease.</text>
+    <text x='0' y='145' font-family='system-ui, -apple-system, sans-serif' font-weight='500' font-size='22' fill='#94a3b8'>Student accommodation, made simpler.</text>
+    <text x='0' y='178' font-family='system-ui, -apple-system, sans-serif' font-weight='500' font-size='22' fill='#94a3b8'>Discover &amp; book verified hostels with ease.</text>
     
     <!-- Feature Highlights -->
     <g transform='translate(0, 230)'>
@@ -73,6 +73,6 @@
   
   <!-- Footer Bar -->
   <rect x='80' y='500' width='1040' height='70' rx='0' fill='#0f172a' fill-opacity='0.8' />
-  <text x='130' y='542' font-family='system-ui, -apple-system, sans-serif' font-weight='700' font-size='16' fill='#64748b'>campora.app</text>
+  <text x='130' y='542' font-family='system-ui, -apple-system, sans-serif' font-weight='700' font-size='16' fill='#64748b'>dormiqa.app</text>
   <text x='1070' y='542' font-family='system-ui, -apple-system, sans-serif' font-weight='700' font-size='16' fill='#10b981' text-anchor='end'>Verified Housing Near Campus</text>
 </svg>

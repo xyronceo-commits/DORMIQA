@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { INITIAL_UNIVERSITIES } from '../data/mockData';
 import { ArrowUpRight } from 'lucide-react';
-import { CamporaLogo } from './CamporaLogo';
+import { DormiqaLogo } from './DormiqaLogo';
 
 export const Footer: React.FC = () => {
   const { 
@@ -32,14 +32,14 @@ export const Footer: React.FC = () => {
               onClick={() => setActiveView('home')} 
               className="cursor-pointer inline-block"
             >
-              <CamporaLogo size="md" textColor="text-white" pinColor="#10b981" />
+              <DormiqaLogo size="md" textColor="text-white" pinColor="#10b981" />
             </div>
             <p className="text-xs text-neutral-400 leading-relaxed max-w-sm font-normal">
               Africa's premier student accommodation platform. Connecting university students with verified agents for hostels, self-contain apartments, and lodges near major African campuses.
             </p>
             <div className="pt-1 flex flex-wrap items-center gap-2 text-[11px] font-bold text-neutral-300">
               <button 
-                onClick={() => openDoc('about-campora')} 
+                onClick={() => openDoc('about-dormiqa')} 
                 className="hover:text-emerald-400 underline"
               >
                 About Us
@@ -183,10 +183,10 @@ export const Footer: React.FC = () => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500">
           <div className="flex flex-wrap items-center gap-3">
-            <p>© 2026 Campora Africa Inc. All rights reserved.</p>
+            <p>© 2026 Dormiqa Africa Inc. All rights reserved.</p>
             <span className="hidden sm:inline text-neutral-700">•</span>
             <p className="text-[11px] text-neutral-500">
-              Campora is a technology platform connecting students with verified property agents.
+              Dormiqa is a technology platform connecting students with verified property agents.
             </p>
           </div>
           <div className="flex items-center gap-4 text-[11px]">

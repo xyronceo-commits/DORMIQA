@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Listing } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { Bookmark, Star, ShieldCheck, MapPin, Navigation, Eye, Calendar, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { Bookmark, ShieldCheck, MapPin, Navigation, Calendar, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 
 interface ListingCardProps {
   listing: Listing;
@@ -13,6 +13,26 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect }) =
   const [currentImageIdx, setCurrentImageIdx] = useState(0);
 
   const saved = isSaved(listing.id);
+  const formattedPrice = new Intl.NumberFormat().format(listing.price);
+
+  const typeLabels: Record<string, string> = {
+    hostel: 'Hostel',
+    self_contain: 'Self-Contain',
+    single_room: 'Single Room',
+    flat_apartment: 'Flat Apartment',
+    shared_lodge: 'Shared Lodge',
+    studio: 'Studio',
+  };
+
+  const handleClickCard = () => {
+    if (!user) {
+      setAuthModalTab('student_signup');
+      setAuthModalOpen(true);
+      return;
+    }
+    setSelectedListing(listing);
+    if (onSelect) onSelect(listing);
+  };
 
   const nextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -28,81 +48,30 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect }) =
     }
   };
 
-  const formattedPrice = new Intl.NumberFormat().format(listing.price);
-
-  const typeLabels: Record<string, string> = {
-    hostel: 'Hostel',
-    self_contain: 'Self-Contain',
-    single_room: 'Single Room',
-    flat_apartment: 'Flat Apartment',
-    shared_lodge: 'Shared Lodge',
-    studio: 'Studio',
-  };
-
   return (
     <div
-      onClick={() => {
-        if (!user) {
-          setAuthModalTab('student_signup');
-          setAuthModalOpen(true);
-          return;
-        }
-        setSelectedListing(listing);
-        if (onSelect) onSelect(listing);
-      }}
-      className="group relative flex flex-col bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-700/80 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1"
+      onClick={handleClickCard}
+      className="group flex flex-col bg-white dark:bg-slate-900 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer"
     >
-      {/* Top Image Box */}
-      <div className="relative w-full aspect-[4/3] bg-slate-100 dark:bg-slate-900 overflow-hidden">
+      {/* Property Photo */}
+      <div className="relative w-full aspect-[4/3] bg-slate-100 dark:bg-slate-800 overflow-hidden">
         <img
           src={listing.images[currentImageIdx] || listing.images[0]}
           alt={listing.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-300"
           loading="lazy"
         />
 
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-black/20" />
-
-        {/* Carousel Buttons */}
-        {listing.images.length > 1 && (
-          <>
-            <button
-              onClick={prevImage}
-              className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/40 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={nextImage}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/40 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-            {/* Image Indicator Dots */}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1">
-              {listing.images.map((_, idx) => (
-                <span
-                  key={idx}
-                  className={`h-1.5 rounded-full transition-all ${
-                    idx === currentImageIdx ? 'w-4 bg-white' : 'w-1.5 bg-white/50'
-                  }`}
-                />
-              ))}
-            </div>
-          </>
-        )}
-
         {/* Top Badges */}
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 pointer-events-none">
-          <div className="flex flex-wrap items-center gap-1.5 pointer-events-auto">
+          <div className="flex items-center gap-1.5 pointer-events-auto">
             {listing.isAgentVerified && (
-              <span className="px-2.5 py-1 rounded-full bg-emerald-500 text-white font-semibold text-[11px] tracking-wide shadow-md flex items-center gap-1">
+              <span className="px-2.5 py-1 rounded-full bg-emerald-600 text-white font-medium text-[11px] flex items-center gap-1 shadow-xs">
                 <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
-                Verified Agent
+                Verified
               </span>
             )}
-            <span className="px-2.5 py-1 rounded-full bg-slate-900/80 dark:bg-black/80 backdrop-blur text-white font-medium text-[11px]">
+            <span className="px-2.5 py-1 rounded-full bg-slate-900/80 text-white font-medium text-[11px]">
               {typeLabels[listing.type] || listing.type}
             </span>
           </div>
@@ -117,10 +86,10 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect }) =
               }
               toggleSaveListing(listing.id);
             }}
-            className={`p-2 rounded-full backdrop-blur transition-all pointer-events-auto ${
+            className={`p-2 rounded-full transition-colors pointer-events-auto ${
               saved
-                ? 'bg-rose-500 text-white shadow-md'
-                : 'bg-black/40 hover:bg-black/70 text-white'
+                ? 'bg-rose-500 text-white'
+                : 'bg-black/50 hover:bg-black/70 text-white'
             }`}
             title={saved ? 'Unsave listing' : 'Save listing'}
           >
@@ -128,79 +97,78 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect }) =
           </button>
         </div>
 
-        {/* Bottom Image Info Badge */}
-        <div className="absolute bottom-3 left-3 flex items-center gap-2">
-          <span className="px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur text-white font-medium text-xs flex items-center gap-1">
-            <Navigation className="w-3 h-3 text-emerald-400" />
-            {listing.distanceToCampusMinutes} min walk to campus
-          </span>
-        </div>
+        {/* Carousel Prev/Next Controls */}
+        {listing.images.length > 1 && (
+          <>
+            <button
+              onClick={prevImage}
+              className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/40 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={nextImage}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/40 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </>
+        )}
       </div>
 
-      {/* Body Info */}
+      {/* Card Content */}
       <div className="p-4 flex-1 flex flex-col justify-between gap-3">
-        <div>
-          {/* Title & Rating */}
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-bold text-neutral-900 dark:text-neutral-100 text-base line-clamp-1 group-hover:text-emerald-600 transition-colors">
-              {listing.title}
-            </h3>
-            <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 px-2 py-0.5 rounded-md text-xs font-bold shrink-0 border border-neutral-200 dark:border-neutral-700">
-              <Star className="w-3.5 h-3.5 fill-current text-amber-500" />
-              <span>{listing.ratings.overall}</span>
-              {listing.ratings.count > 0 && (
-                <span className="text-[10px] text-neutral-500 font-normal">({listing.ratings.count})</span>
-              )}
+        <div className="space-y-1.5">
+          {/* Price & Period */}
+          <div className="flex items-baseline justify-between gap-2">
+            <div className="flex items-baseline gap-1">
+              <span className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                {listing.currency}{formattedPrice}
+              </span>
+              <span className="text-xs text-slate-500 font-normal">
+                /{listing.pricePeriod}
+              </span>
             </div>
+            {listing.ratings?.overall > 0 && (
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                ★ {listing.ratings.overall}
+              </span>
+            )}
           </div>
 
-          {/* Location & University */}
-          <p className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1 mt-1 line-clamp-1">
-            <MapPin className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-            <span className="font-medium text-neutral-700 dark:text-neutral-300">{listing.universityName}</span> • {listing.campus}
+          {/* Title */}
+          <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-base line-clamp-1 group-hover:text-emerald-600 transition-colors">
+            {listing.title}
+          </h3>
+
+          {/* Distance & Campus Location */}
+          <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 pt-0.5">
+            <Navigation className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span>{listing.distanceToCampusMinutes} min walk to {listing.universityName}</span>
           </p>
 
           {/* Facilities Summary */}
-          <div className="flex flex-wrap items-center gap-1.5 mt-3 text-[11px] text-neutral-600 dark:text-neutral-300">
+          <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[11px] text-slate-600 dark:text-slate-400">
             {listing.facilities.slice(0, 3).map((fac, idx) => (
-              <span key={idx} className="px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 capitalize font-medium">
+              <span key={idx} className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 font-medium capitalize">
                 {fac.replace('_', ' ')}
               </span>
             ))}
             {listing.facilities.length > 3 && (
-              <span className="text-neutral-400 text-[10px] font-semibold">+ {listing.facilities.length - 3} more</span>
+              <span className="text-slate-400 text-[11px]">+ {listing.facilities.length - 3} more</span>
             )}
           </div>
         </div>
 
-        {/* Footer Price & Actions */}
-        <div className="pt-3 border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between gap-2">
-          <div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-lg font-black text-neutral-900 dark:text-neutral-100">
-                {listing.currency}{formattedPrice}
-              </span>
-              <span className="text-xs text-neutral-500 font-medium">
-                / {listing.pricePeriod}
-              </span>
-            </div>
-            <p className="text-[11px] font-semibold flex items-center gap-1">
-              {listing.unitStatus === 'under_renovation' ? (
-                <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1 font-extrabold">
-                  🛠️ Under Renovation
-                </span>
-              ) : listing.unitStatus === 'occupied' || listing.isOccupied ? (
-                <span className="text-rose-600 dark:text-rose-400 font-extrabold">
-                  🔴 Fully Occupied
-                </span>
-              ) : (
-                <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                  <Check className="w-3 h-3" />
-                  {listing.availableRooms ?? listing.totalRooms} {listing.availableRooms === 1 ? 'room' : 'rooms'} available
-                </span>
-              )}
-            </p>
-          </div>
+        {/* Primary Action Button */}
+        <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+          <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+            {listing.unitStatus === 'occupied' || listing.isOccupied ? (
+              <span className="text-slate-400">Occupied</span>
+            ) : (
+              `${listing.availableRooms ?? listing.totalRooms} available`
+            )}
+          </span>
 
           <button
             onClick={(e) => {
@@ -212,10 +180,10 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect }) =
               }
               setInspectionModalListing(listing);
             }}
-            className="px-3.5 py-2 rounded-xl bg-black hover:bg-neutral-800 text-white font-bold text-xs transition-colors flex items-center gap-1.5 shadow-sm"
+            className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-colors flex items-center gap-1"
           >
-            <Calendar className="w-3.5 h-3.5 text-emerald-400" />
-            Inspect
+            <Calendar className="w-3.5 h-3.5" />
+            Book Inspection
           </button>
         </div>
       </div>

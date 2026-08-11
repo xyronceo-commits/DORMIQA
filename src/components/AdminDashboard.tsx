@@ -3,636 +3,684 @@ import { useAuth } from '../context/AuthContext';
 import { fetchListings } from '../lib/api';
 import { Listing } from '../types';
 import { UserProfileSection } from './UserProfileSection';
-import { INITIAL_UNIVERSITIES } from '../data/mockData';
 import { 
-  ShieldCheck, AlertTriangle, Users, Building2, GraduationCap, CheckCircle, 
-  XCircle, Ban, Eye, RefreshCw, FileText, Lock, ShieldAlert, CheckCircle2,
-  Plus, Search, Filter, Activity, Server, Clock
+  ShieldCheck, ShieldAlert, Users, Building2, GraduationCap, CheckCircle2, 
+  XCircle, Eye, RefreshCw, FileText, Lock, LogOut, BarChart3, TrendingUp,
+  ChevronRight, Check, AlertCircle, Sparkles, Filter, Search, Phone, Mail, MapPin
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export const AdminDashboard: React.FC = () => {
-  const { addToast } = useAuth();
+  const { adminLogout, adminToken, addToast } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'moderation' | 'agent_verification' | 'disputes' | 'institutions' | 'audit_logs' | 'profile'>('moderation');
+  const [activeTab, setActiveTab] = useState<'agents' | 'properties' | 'students' | 'analytics' | 'profile'>('agents');
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [serverStats, setServerStats] = useState<any>(null);
 
   // Agent Verification Requests Queue
-  const [pendingAgents, setPendingAgents] = useState([
-    { 
-      id: 'ag_p1', 
-      name: 'Alaba Student Housing Ltd', 
-      email: 'alaba@housing.ng', 
-      uni: 'University of Lagos (UNILAG)', 
-      docType: 'NIN-84920491823', 
-      photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-      status: 'pending' 
-    },
-    { 
-      id: 'ag_p2', 
-      name: 'Ile-Ife Campus Properties', 
-      email: 'oau@properties.ng', 
-      uni: 'Obafemi Awolowo University (OAU)', 
-      docType: 'CAC-RC892019', 
-      photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
-      status: 'pending' 
-    },
-    { 
-      id: 'ag_p3', 
-      name: 'Yabatech Hostels Consult', 
-      email: 'yaba@hostels.ng', 
-      uni: 'Yaba College of Technology', 
-      docType: 'NIN-99102837482', 
-      photoUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
-      status: 'pending' 
-    },
-  ]);
+  const [agents, setAgents] = useState<any[]>([]);
 
-  // Selected agent photo modal state
-  const [previewPhotoModal, setPreviewPhotoModal] = useState<string | null>(null);
-
-  // Security Fraud Reports Queue
-  const [reports, setReports] = useState([
-    { id: 'rep_01', listingTitle: 'Subsea Luxury Student Suites', reason: 'Unresponsive Agent Asking for Fee Before Viewing', reporter: 'Chidi O. (UNILAG)', status: 'open', date: '10 mins ago' },
-    { id: 'rep_02', listingTitle: 'Silverline Deluxe Self-Contain', reason: 'Photos do not match actual room condition', reporter: 'Amina B. (ABU Zaria)', status: 'open', date: '1 hour ago' },
-  ]);
-
-  // Institution List State
-  const [universitiesList, setUniversitiesList] = useState(INITIAL_UNIVERSITIES);
-  const [newUniName, setNewUniName] = useState('');
-  const [newUniShort, setNewUniShort] = useState('');
-  const [newUniState, setNewUniState] = useState('Lagos');
-  const [newUniType, setNewUniType] = useState<'University' | 'Polytechnic' | 'College of Education'>('University');
-  const [isAddingUni, setIsAddingUni] = useState(false);
+  // Selected agent modal for detailed verification review
+  const [reviewAgent, setReviewAgent] = useState<any | null>(null);
+  const [reviewProperty, setReviewProperty] = useState<Listing | null>(null);
 
   useEffect(() => {
+    // Fetch listings
     fetchListings({})
       .then(data => setListings(data))
       .catch(() => {})
       .finally(() => setLoading(false));
 
-    // Fetch submitted agent verifications
+    // Fetch server admin stats if token present
+    if (adminToken) {
+      fetch(`/api/admin/stats?token=${adminToken}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && !data.error) {
+            setServerStats(data);
+          }
+        })
+        .catch(() => {});
+    }
+
+    // Fetch real verifications submitted via API
     fetch('/api/verifications')
       .then(res => res.json())
       .then(data => {
         if (data && data.verifications && data.verifications.length > 0) {
           const liveAgents = data.verifications.map((v: any) => ({
             id: v.id,
-            name: v.businessName || v.agentName,
-            email: v.agentEmail,
+            name: v.businessName || 'Independent Campus Agent',
+            agentName: v.agentName || 'Agent',
+            email: v.agentEmail || 'agent@dormiqa.ng',
+            phone: v.phone || '+234 800 000 0000',
             uni: v.officeAddress || 'Campus Property Agent',
-            docType: v.proofType?.toUpperCase() || 'OFFICE PHOTO',
+            docType: v.proofType?.toUpperCase() || 'OFFICE & IDENTITY DOC',
+            docRef: v.id,
+            officeAddress: v.officeAddress || 'Campus Area',
+            submittedDate: 'Recently',
+            propertiesCount: 1,
             photoUrl: v.agentPhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
             status: v.status || 'pending'
           }));
-          setPendingAgents(prev => {
-            const existingIds = new Set(prev.map(p => p.id));
-            const filteredNew = liveAgents.filter((a: any) => !existingIds.has(a.id));
-            return [...filteredNew, ...prev];
-          });
+          setAgents(liveAgents);
         }
       })
       .catch(() => {});
-  }, []);
+  }, [adminToken]);
 
-  const handleApproveListing = (id: string) => {
-    setListings(prev => prev.map(l => l.id === id ? { ...l, status: 'active', isAgentVerified: true } : l));
-    addToast('Listing Approved', 'Hostel accommodation approved for public discovery.', 'success');
-  };
-
-  const handleFlagListing = (id: string) => {
-    setListings(prev => prev.map(l => l.id === id ? { ...l, status: 'flagged' } : l));
-    addToast('Listing Suspended', 'Property flagged and hidden from search.', 'warning');
-  };
-
-  const handleApproveAgent = (id: string) => {
-    setPendingAgents(prev => prev.map(a => a.id === id ? { ...a, status: 'approved' } : a));
-    addToast('Agent Gold Badge Granted', 'Verification badge issued to agent account.', 'success');
+  const handleVerifyAgent = (id: string) => {
+    setAgents(prev => prev.map(a => a.id === id ? { ...a, status: 'verified' } : a));
+    addToast('Agent Verified', 'Badge and verified listing rights granted to agent', 'success');
   };
 
   const handleRejectAgent = (id: string) => {
-    setPendingAgents(prev => prev.filter(a => a.id !== id));
-    addToast('Agent Request Declined', 'Agent verification declined.', 'info');
+    setAgents(prev => prev.map(a => a.id === id ? { ...a, status: 'rejected' } : a));
+    addToast('Verification Declined', 'Agent application status updated to rejected', 'info');
   };
 
-  const handleResolveReport = (id: string) => {
-    setReports(prev => prev.map(r => r.id === id ? { ...r, status: 'resolved' } : r));
-    addToast('Report Resolved', 'Fraud report marked as resolved.', 'success');
+  const handleApproveProperty = (id: string) => {
+    setListings(prev => prev.map(l => l.id === id ? { ...l, status: 'active', isAgentVerified: true } : l));
+    addToast('Property Approved', 'Listing is now live on Dormiqa marketplace', 'success');
   };
 
-  const handleAddInstitution = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newUniName || !newUniShort) {
-      addToast('Missing Info', 'Please enter institution name and acronym', 'warning');
-      return;
-    }
-
-    const newInst = {
-      id: `uni_${Date.now()}`,
-      name: newUniName,
-      shortName: newUniShort,
-      country: 'Nigeria',
-      state: newUniState,
-      city: newUniState,
-      institutionType: newUniType,
-      ownership: 'Federal' as any,
-      campuses: ['Main Campus'],
-      coordinates: { lat: 6.5244, lng: 3.3792 },
-      studentCount: '25,000+',
-      totalListings: 1,
-      image: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=800&q=80',
-    };
-
-    setUniversitiesList(prev => [newInst, ...prev]);
-    setIsAddingUni(false);
-    setNewUniName('');
-    setNewUniShort('');
-    addToast('Institution Added', `${newUniName} added to Campora tertiary network.`);
+  const handleRejectProperty = (id: string) => {
+    setListings(prev => prev.map(l => l.id === id ? { ...l, status: 'closed' } : l));
+    addToast('Property Rejected', 'Property status updated', 'info');
   };
+
+  const pendingAgentsCount = agents.filter(a => a.status === 'pending').length;
+  const pendingPropertiesCount = listings.filter(l => l.status === 'pending_review' || !l.isAgentVerified).length;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
-      
-      {/* Executive Admin Header - Purple Governance Vibe */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-slate-900 text-white shadow-xl border border-purple-900/60 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
-        <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-64 h-64 rounded-full bg-purple-600/10 blur-3xl pointer-events-none" />
-
-        <div className="flex items-center gap-4 relative z-10">
-          <div className="p-4 rounded-2xl bg-purple-600 text-white font-black shadow-lg shadow-purple-600/30">
-            <ShieldCheck className="w-8 h-8" />
+      {/* Admin Top Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="flex items-center gap-3.5">
+          <div className="p-3 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-black">
+            <ShieldCheck className="w-6 h-6 text-emerald-400 dark:text-emerald-600" />
           </div>
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-xs font-extrabold border border-purple-500/30 mb-1">
-              <Lock className="w-3.5 h-3.5" /> Platform Governance Console
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                Dormiqa Admin
+              </h1>
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-semibold text-[10px] uppercase tracking-wider">
+                Authorized Session
+              </span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-extrabold">Campora Trust & Safety Command</h1>
-            <p className="text-xs text-slate-300 mt-0.5">Moderating student hostels and agent verification across 36 Nigerian states</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              Secure internal operational dashboard & verification desk
+            </p>
           </div>
         </div>
 
-        {/* Stats Badges */}
-        <div className="flex flex-wrap items-center gap-3 relative z-10">
-          <div className="px-4 py-3 rounded-2xl bg-slate-800/90 border border-slate-700/80 text-center">
-            <span className="block text-[11px] text-slate-400 font-semibold">Flagged Reports</span>
-            <span className="text-xl font-black text-rose-400">{reports.filter(r => r.status === 'open').length}</span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setActiveTab('profile')}
+            className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs transition-colors"
+          >
+            Settings
+          </button>
+          <button
+            onClick={adminLogout}
+            className="px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 font-bold text-xs transition-colors flex items-center gap-1.5"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Logout</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Metric Quick Stats Bar */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Students</p>
+            <p className="text-2xl font-black text-slate-900 dark:text-slate-100 mt-1">
+              {serverStats?.students?.total?.toLocaleString() ?? 0}
+            </p>
+            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1">
+              <TrendingUp className="w-3 h-3 text-slate-400" />
+              +{serverStats?.students?.newThisWeek ?? 0} this week
+            </span>
           </div>
-          <div className="px-4 py-3 rounded-2xl bg-slate-800/90 border border-slate-700/80 text-center">
-            <span className="block text-[11px] text-slate-400 font-semibold">Pending Agents</span>
-            <span className="text-xl font-black text-amber-400">{pendingAgents.filter(a => a.status === 'pending').length}</span>
+          <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
+            <Users className="w-5 h-5" />
           </div>
-          <div className="px-4 py-3 rounded-2xl bg-slate-800/90 border border-slate-700/80 text-center">
-            <span className="block text-[11px] text-slate-400 font-semibold">Active Campuses</span>
-            <span className="text-xl font-black text-purple-400">{universitiesList.length}</span>
+        </div>
+
+        <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Pending Agents</p>
+            <p className="text-2xl font-black text-slate-900 dark:text-slate-100 mt-1">
+              {pendingAgentsCount}
+            </p>
+            <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400 mt-1 block">
+              Awaiting verification
+            </span>
+          </div>
+          <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400">
+            <ShieldAlert className="w-5 h-5" />
+          </div>
+        </div>
+
+        <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Active Listings</p>
+            <p className="text-2xl font-black text-slate-900 dark:text-slate-100 mt-1">
+              {listings.length}
+            </p>
+            <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 mt-1 block">
+              Active marketplace
+            </span>
+          </div>
+          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400">
+            <Building2 className="w-5 h-5" />
+          </div>
+        </div>
+
+        <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Verification Rate</p>
+            <p className="text-2xl font-black text-slate-900 dark:text-slate-100 mt-1">
+              {serverStats?.verificationRate || '0%'}
+            </p>
+            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1 block">
+              Verified agents ratio
+            </span>
+          </div>
+          <div className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
+            <ShieldCheck className="w-5 h-5" />
           </div>
         </div>
       </div>
 
-      {/* Admin Navigation Bar */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar border-b border-slate-200 dark:border-slate-800 pb-2 text-xs font-bold">
+      {/* Navigation Tabs */}
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 overflow-x-auto pb-1 scrollbar-none">
         <button
-          onClick={() => setActiveTab('moderation')}
-          className={`px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shrink-0 ${
-            activeTab === 'moderation'
-              ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
+          onClick={() => setActiveTab('agents')}
+          className={`px-4 py-2.5 rounded-xl font-bold text-xs transition-colors flex items-center gap-2 whitespace-nowrap ${
+            activeTab === 'agents'
+              ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <ShieldCheck className="w-4 h-4" />
+          <span>Agent Verification</span>
+          {pendingAgentsCount > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-white font-black text-[10px]">
+              {pendingAgentsCount}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('properties')}
+          className={`px-4 py-2.5 rounded-xl font-bold text-xs transition-colors flex items-center gap-2 whitespace-nowrap ${
+            activeTab === 'properties'
+              ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-sm'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
           <Building2 className="w-4 h-4" />
-          Listing Moderation ({listings.length})
+          <span>Property Verification</span>
         </button>
 
         <button
-          onClick={() => setActiveTab('agent_verification')}
-          className={`px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shrink-0 ${
-            activeTab === 'agent_verification'
-              ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <Users className="w-4 h-4" />
-          Agent Verification Queue ({pendingAgents.filter(a => a.status === 'pending').length})
-        </button>
-
-        <button
-          onClick={() => setActiveTab('disputes')}
-          className={`px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shrink-0 ${
-            activeTab === 'disputes'
-              ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <ShieldAlert className="w-4 h-4 text-rose-500" />
-          Fraud Reports & Disputes ({reports.filter(r => r.status === 'open').length})
-        </button>
-
-        <button
-          onClick={() => setActiveTab('institutions')}
-          className={`px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shrink-0 ${
-            activeTab === 'institutions'
-              ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
+          onClick={() => setActiveTab('students')}
+          className={`px-4 py-2.5 rounded-xl font-bold text-xs transition-colors flex items-center gap-2 whitespace-nowrap ${
+            activeTab === 'students'
+              ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-sm'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
           <GraduationCap className="w-4 h-4" />
-          Campus Network ({universitiesList.length})
+          <span>Student Overview</span>
         </button>
 
         <button
-          onClick={() => setActiveTab('audit_logs')}
-          className={`px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shrink-0 ${
-            activeTab === 'audit_logs'
-              ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
+          onClick={() => setActiveTab('analytics')}
+          className={`px-4 py-2.5 rounded-xl font-bold text-xs transition-colors flex items-center gap-2 whitespace-nowrap ${
+            activeTab === 'analytics'
+              ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-sm'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
-          <Activity className="w-4 h-4" />
-          Security Audit Logs
-        </button>
-
-        <button
-          onClick={() => setActiveTab('profile' as any)}
-          className={`px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shrink-0 ${
-            (activeTab as string) === 'profile'
-              ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          Admin Profile & Accounts
+          <BarChart3 className="w-4 h-4" />
+          <span>Analytics</span>
         </button>
       </div>
 
-      {/* Tab 1: Listing Moderation Queue */}
-      {activeTab === 'moderation' && (
+      {/* TAB 1: AGENT VERIFICATION QUEUE */}
+      {activeTab === 'agents' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="font-extrabold text-lg text-slate-900 dark:text-slate-100">
-              Hostel Property Moderation Audit
-            </h3>
+            <div>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                Agent & Business Verification Desk
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Review submitted NIN, CAC, and office credentials before granting agent badges.
+              </p>
+            </div>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
-            <table className="w-full text-left text-xs text-slate-800 dark:text-slate-200">
-              <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 font-bold uppercase text-[10px] text-slate-400">
-                <tr>
-                  <th className="p-4">Property Title</th>
-                  <th className="p-4">Target Campus</th>
-                  <th className="p-4">Agent Name</th>
-                  <th className="p-4">Annual Rent</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4 text-right">Moderation Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-700/60">
-                {listings.map(l => (
-                  <tr key={l.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
-                    <td className="p-4 font-bold text-slate-900 dark:text-slate-100">{l.title}</td>
-                    <td className="p-4 text-slate-500 font-medium">{l.universityName}</td>
-                    <td className="p-4 font-semibold text-slate-700 dark:text-slate-300">{l.agentName}</td>
-                    <td className="p-4 font-black text-emerald-600 dark:text-emerald-400">
-                      ₦{new Intl.NumberFormat().format(l.price)}
-                    </td>
-                    <td className="p-4">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                        l.status === 'flagged'
-                          ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
-                          : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                      }`}>
-                        {l.status}
+          <div className="grid grid-cols-1 gap-4">
+            {agents.length === 0 ? (
+              <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <ShieldCheck className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">No verification requests</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+                  When property agents submit their business or identity verification, applications will appear here for administrative approval.
+                </p>
+              </div>
+            ) : (
+              agents.map((ag) => (
+              <div
+                key={ag.id}
+                className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4"
+              >
+                <div className="flex items-start gap-4">
+                  <img
+                    src={ag.photoUrl}
+                    alt={ag.name}
+                    className="w-14 h-14 rounded-xl object-cover border border-slate-200 dark:border-slate-800 shrink-0"
+                  />
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                        {ag.name}
+                      </h3>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                        ({ag.agentName})
                       </span>
-                    </td>
-                    <td className="p-4 text-right space-x-2">
-                      <button
-                        onClick={() => handleApproveListing(l.id)}
-                        className="px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-[11px] font-bold hover:bg-emerald-700"
-                      >
-                        Approve Live
-                      </button>
-                      <button
-                        onClick={() => handleFlagListing(l.id)}
-                        className="px-3 py-1.5 rounded-xl bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 text-[11px] font-bold hover:bg-rose-200"
-                      >
-                        Flag / Takedown
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      {ag.status === 'verified' && (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3" /> Verified
+                        </span>
+                      )}
+                      {ag.status === 'rejected' && (
+                        <span className="px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-bold text-[10px]">
+                          Rejected
+                        </span>
+                      )}
+                      {ag.status === 'pending' && (
+                        <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 font-bold text-[10px]">
+                          Pending Review
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-slate-600 dark:text-slate-300 font-medium flex items-center gap-1.5">
+                      <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span>{ag.uni}</span>
+                    </p>
+
+                    <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 flex-wrap pt-1">
+                      <span className="flex items-center gap-1">
+                        <Mail className="w-3 h-3 text-slate-400" />
+                        {ag.email}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Phone className="w-3 h-3 text-slate-400" />
+                        {ag.phone}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <FileText className="w-3 h-3 text-slate-400" />
+                        {ag.docType} ({ag.docRef})
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-slate-800">
+                  <button
+                    onClick={() => setReviewAgent(ag)}
+                    className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs transition-colors flex items-center gap-1"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Review</span>
+                  </button>
+
+                  {ag.status !== 'verified' && (
+                    <button
+                      onClick={() => handleVerifyAgent(ag.id)}
+                      className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors flex items-center gap-1 shadow-sm"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Verify</span>
+                    </button>
+                  )}
+
+                  {ag.status !== 'rejected' && (
+                    <button
+                      onClick={() => handleRejectAgent(ag.id)}
+                      className="px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 font-semibold text-xs transition-colors"
+                    >
+                      Reject
+                    </button>
+                  )}
+                </div>
+              </div>
+            )))}
           </div>
         </div>
       )}
 
-      {/* Tab 2: Agent Verification Requests */}
-      {activeTab === 'agent_verification' && (
+      {/* TAB 2: PROPERTY VERIFICATION QUEUE */}
+      {activeTab === 'properties' && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="font-extrabold text-lg text-slate-900 dark:text-slate-100">
-              Pending Agent Gold Badge Approvals
-            </h3>
+          <div>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+              Accommodation Property Review
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Audit submitted student properties and ensure pricing, photos, and location details meet quality standards.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {listings.length === 0 ? (
+              <div className="col-span-full p-12 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <Building2 className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">No properties to review</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+                  When new accommodation listings are submitted by agents, they will appear here for verification.
+                </p>
+              </div>
+            ) : (
+              listings.slice(0, 8).map((prop) => (
+              <div
+                key={prop.id}
+                className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4"
+              >
+                <div className="flex items-start gap-3">
+                  <img
+                    src={prop.images?.[0] || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=600&q=80'}
+                    alt={prop.title}
+                    className="w-20 h-20 rounded-xl object-cover border border-slate-200 dark:border-slate-800 shrink-0"
+                  />
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[10px]">
+                      {prop.roomType || 'Self-Contain'}
+                    </span>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
+                      {prop.title}
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate flex items-center gap-1">
+                      <MapPin className="w-3 h-3 shrink-0 text-slate-400" />
+                      {prop.locationName || prop.universityName}
+                    </p>
+                    <p className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                      ₦{prop.price?.toLocaleString()} / year
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 text-xs text-slate-600 dark:text-slate-300 space-y-1">
+                  <p className="font-semibold text-slate-900 dark:text-slate-100">
+                    Agent: {prop.agentName || 'Verified Campus Agent'}
+                  </p>
+                  <p className="text-slate-500 dark:text-slate-400 text-[11px]">
+                    Facilities: {prop.facilities?.slice(0, 4).join(', ') || 'Water, Security, Electricity'}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <span className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${
+                    prop.status === 'active' || prop.isAgentVerified
+                      ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300'
+                      : 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300'
+                  }`}>
+                    {prop.status === 'active' || prop.isAgentVerified ? 'Approved & Live' : 'Under Review'}
+                  </span>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleApproveProperty(prop.id)}
+                      className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => handleRejectProperty(prop.id)}
+                      className="px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-700 dark:text-rose-300 font-semibold text-xs transition-colors"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: STUDENT OVERVIEW */}
+      {activeTab === 'students' && (
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+              Student Community Overview
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Aggregated statistics of registered student accounts across Nigerian universities.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {pendingAgents.map(ag => (
-              <div
-                key={ag.id}
-                className="p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm space-y-3"
-              >
-                <div className="flex items-center justify-between">
-                  <h4 className="font-extrabold text-sm text-slate-900 dark:text-slate-100">{ag.name}</h4>
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                    ag.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                  }`}>
-                    {ag.status}
-                  </span>
+            {/* University Distribution */}
+            <div className="p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <GraduationCap className="w-4 h-4 text-emerald-600" />
+                <span>Students by University</span>
+              </h3>
+
+              <div className="space-y-3">
+                {(!serverStats?.students?.byUniversity || serverStats.students.byUniversity.length === 0) ? (
+                  <p className="text-xs text-slate-500 dark:text-slate-400 py-6 text-center">
+                    No registered student accounts recorded yet across universities.
+                  </p>
+                ) : (
+                  serverStats.students.byUniversity.map((uni: any, idx: number) => {
+                    const max = 450;
+                    const pct = Math.min(100, Math.round((uni.count / max) * 100));
+                    return (
+                      <div key={idx} className="space-y-1">
+                        <div className="flex justify-between text-xs font-semibold">
+                          <span className="text-slate-700 dark:text-slate-300">{uni.name}</span>
+                          <span className="text-slate-900 dark:text-slate-100 font-bold">{uni.count} students</span>
+                        </div>
+                        <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                          <div
+                            className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Registration Activity Breakdown */}
+            <div className="p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-blue-600" />
+                <span>Onboarding Metrics</span>
+              </h3>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80">
+                  <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">New Today</p>
+                  <p className="text-xl font-black text-slate-900 dark:text-slate-100 mt-1">
+                    +{serverStats?.students?.newToday ?? 0}
+                  </p>
                 </div>
 
-                {/* Agent Identity Photo Display */}
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700">
-                  <div 
-                    onClick={() => ag.photoUrl && setPreviewPhotoModal(ag.photoUrl)}
-                    className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-emerald-500 shrink-0 cursor-pointer group shadow-sm"
-                  >
-                    <img 
-                      src={ag.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80'} 
-                      alt={ag.name} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
-                    />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-[10px] font-extrabold">
-                      Inspect
-                    </div>
-                  </div>
-
-                  <div className="text-xs space-y-0.5 flex-1 min-w-0">
-                    <span className="inline-flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-300 text-[10px] bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800">
-                      <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                      Face Unmasked & Unblurred
-                    </span>
-                    <p className="text-slate-700 dark:text-slate-300 truncate font-semibold">
-                      <strong>Email:</strong> {ag.email}
-                    </p>
-                    <p className="text-slate-600 dark:text-slate-400 truncate">
-                      <strong>Campus / Office:</strong> {ag.uni}
-                    </p>
-                    <p className="text-purple-600 dark:text-purple-400 font-bold text-[11px]">
-                      <strong>Doc Type:</strong> {ag.docType}
-                    </p>
-                  </div>
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80">
+                  <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">New This Week</p>
+                  <p className="text-xl font-black text-slate-900 dark:text-slate-100 mt-1">
+                    +{serverStats?.students?.newThisWeek ?? 0}
+                  </p>
                 </div>
 
-                {ag.status === 'pending' ? (
-                  <div className="flex items-center justify-end gap-2 pt-2">
-                    <button
-                      onClick={() => handleRejectAgent(ag.id)}
-                      className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-200"
-                    >
-                      Decline
-                    </button>
-                    <button
-                      onClick={() => handleApproveAgent(ag.id)}
-                      className="px-3 py-1.5 rounded-xl bg-purple-600 text-white text-xs font-bold hover:bg-purple-700 flex items-center gap-1"
-                    >
-                      <ShieldCheck className="w-3.5 h-3.5" /> Grant Gold Badge
-                    </button>
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80">
+                  <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">New This Month</p>
+                  <p className="text-xl font-black text-slate-900 dark:text-slate-100 mt-1">
+                    +{serverStats?.students?.newThisMonth ?? 0}
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80">
+                  <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Total Onboarded</p>
+                  <p className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+                    {serverStats?.students?.total ?? 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: ANALYTICS */}
+      {activeTab === 'analytics' && (
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+              Campus Marketplace Analytics
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Insights into student housing demand patterns and platform adoption across Nigeria.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Growth Monthly Signups Chart */}
+            <div className="p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-emerald-600" />
+                <span>Student Signups (Monthly)</span>
+              </h3>
+
+              <div className="h-44 flex items-end justify-between gap-2 pt-4 px-2">
+                {(!serverStats?.analytics?.monthlySignups || serverStats.analytics.monthlySignups.length === 0) ? (
+                  <div className="w-full h-full flex items-center justify-center text-xs text-slate-500 dark:text-slate-400">
+                    No signup analytics recorded yet.
                   </div>
                 ) : (
-                  <p className="text-xs font-bold text-emerald-600 flex items-center gap-1">
-                    <CheckCircle2 className="w-4 h-4" /> Verified Gold Agent
+                  serverStats.analytics.monthlySignups.map((item: any, idx: number) => {
+                    const max = 900;
+                    const heightPct = Math.min(100, Math.round((item.students / max) * 100));
+                    return (
+                      <div key={idx} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                          {item.students}
+                        </span>
+                        <div
+                          className="w-full bg-emerald-500 hover:bg-emerald-600 rounded-t-md transition-all duration-300"
+                          style={{ height: `${heightPct}%` }}
+                        />
+                        <span className="text-[10px] font-semibold text-slate-400">
+                          {item.month}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Demand by Room Type */}
+            <div className="p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-indigo-600" />
+                <span>Demand by Room Type</span>
+              </h3>
+
+              <div className="space-y-3">
+                {(!serverStats?.analytics?.demandByRoomType || serverStats.analytics.demandByRoomType.length === 0) ? (
+                  <p className="text-xs text-slate-500 dark:text-slate-400 py-6 text-center">
+                    No room type request analytics recorded yet.
                   </p>
+                ) : (
+                  serverStats.analytics.demandByRoomType.map((room: any, idx: number) => (
+                    <div key={idx} className="space-y-1">
+                      <div className="flex justify-between text-xs font-semibold">
+                        <span className="text-slate-700 dark:text-slate-300">{room.type}</span>
+                        <span className="text-slate-900 dark:text-slate-100 font-bold">{room.percentage}% ({room.count} requests)</span>
+                      </div>
+                      <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                        <div
+                          className="h-full bg-indigo-500 rounded-full transition-all duration-500"
+                          style={{ width: `${room.percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
-            ))}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Tab 3: Fraud Reports */}
-      {activeTab === 'disputes' && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="font-extrabold text-lg text-slate-900 dark:text-slate-100">
-              Student Safety Reports & Fraud Investigations
-            </h3>
-          </div>
-
-          <div className="space-y-4">
-            {reports.map(rep => (
-              <div
-                key={rep.id}
-                className="p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 text-[10px] font-black uppercase">
-                      ● Report {rep.status}
-                    </span>
-                    <span className="text-[10px] text-slate-400">{rep.date}</span>
-                  </div>
-                  <h4 className="font-extrabold text-sm text-slate-900 dark:text-slate-100">{rep.listingTitle}</h4>
-                  <p className="text-xs text-rose-600 dark:text-rose-400 font-semibold">Reason: {rep.reason}</p>
-                  <p className="text-[11px] text-slate-500">Reported by: {rep.reporter}</p>
-                </div>
-
-                {rep.status === 'open' && (
-                  <button
-                    onClick={() => handleResolveReport(rep.id)}
-                    className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 shrink-0"
-                  >
-                    Resolve & Warn Agent
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Tab 4: Campus Network Directory */}
-      {activeTab === 'institutions' && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="font-extrabold text-lg text-slate-900 dark:text-slate-100">
-              Tertiary Higher Education Institutions ({universitiesList.length})
-            </h3>
-            <button
-              onClick={() => setIsAddingUni(!isAddingUni)}
-              className="px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 flex items-center gap-1.5"
-            >
-              <Plus className="w-4 h-4" /> Add New Institution
-            </button>
-          </div>
-
-          {/* Add Institution Form */}
-          <AnimatePresence>
-            {isAddingUni && (
-              <motion.form
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                onSubmit={handleAddInstitution}
-                className="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md space-y-4"
-              >
-                <h4 className="font-extrabold text-sm text-slate-900 dark:text-slate-100">Add Higher Institution</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Full Institution Name</label>
-                    <input
-                      type="text"
-                      value={newUniName}
-                      onChange={e => setNewUniName(e.target.value)}
-                      placeholder="e.g. Lagos State University"
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-semibold text-slate-800 dark:text-slate-100"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Acronym / Short Name</label>
-                    <input
-                      type="text"
-                      value={newUniShort}
-                      onChange={e => setNewUniShort(e.target.value)}
-                      placeholder="e.g. LASU"
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-semibold text-slate-800 dark:text-slate-100"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Nigerian State</label>
-                    <input
-                      type="text"
-                      value={newUniState}
-                      onChange={e => setNewUniState(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-semibold text-slate-800 dark:text-slate-100"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Type</label>
-                    <select
-                      value={newUniType}
-                      onChange={e => setNewUniType(e.target.value as any)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-semibold text-slate-800 dark:text-slate-100"
-                    >
-                      <option value="University">University</option>
-                      <option value="Polytechnic">Polytechnic</option>
-                      <option value="College of Education">College of Education</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsAddingUni(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700"
-                  >
-                    Save Institution
-                  </button>
-                </div>
-              </motion.form>
-            )}
-          </AnimatePresence>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {universitiesList.map(u => (
-              <div
-                key={u.id}
-                className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between"
-              >
-                <div>
-                  <h4 className="font-extrabold text-xs text-slate-900 dark:text-slate-100">{u.name}</h4>
-                  <p className="text-[10px] text-slate-500">{u.state} State • {u.category || u.institutionType}</p>
-                </div>
-                <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">
-                  {u.shortName}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Agent Photo Modal Inspection Dialog */}
-      <AnimatePresence>
-        {previewPhotoModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 text-center"
-            >
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  Agent Identity Photo Inspection
-                </h3>
-                <button
-                  onClick={() => setPreviewPhotoModal(null)}
-                  className="p-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-                >
-                  <XCircle className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="relative aspect-square rounded-2xl overflow-hidden border-2 border-emerald-500 shadow-md">
-                <img
-                  src={previewPhotoModal}
-                  alt="Agent Identity Photo"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold text-left space-y-1 border border-emerald-200 dark:border-emerald-800">
-                <p className="font-extrabold flex items-center gap-1 text-emerald-900 dark:text-emerald-200">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Identity Criteria Met
-                </p>
-                <p className="text-[11px] opacity-90">
-                  Full face clearly visible, no face mask or sunglasses worn, unblurred photo quality verified.
-                </p>
-              </div>
-
-              <button
-                onClick={() => setPreviewPhotoModal(null)}
-                className="w-full py-2.5 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-extrabold text-xs"
-              >
-                Close Inspection
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Tab 5: Security Audit Logs */}
-      {activeTab === 'audit_logs' && (
-        <div className="bg-slate-900 text-slate-200 p-6 rounded-3xl space-y-4 font-mono text-xs">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-            <span className="text-emerald-400 font-bold flex items-center gap-2">
-              <Activity className="w-4 h-4" /> Live Campora Audit Log Stream
-            </span>
-            <span className="text-[10px] text-slate-500">Node: Clustered-Cloud-01</span>
-          </div>
-          <div className="space-y-2 text-[11px] leading-relaxed">
-            <p><span className="text-slate-500">[2026-08-04 12:10:04]</span> <span className="text-emerald-400">INFO</span> Agent verification submitted for 'Prime Student Residences Ltd'.</p>
-            <p><span className="text-slate-500">[2026-08-04 12:08:22]</span> <span className="text-purple-400">AUTH</span> Student account logged in via UNILAG Akoka portal.</p>
-            <p><span className="text-slate-500">[2026-08-04 12:01:15]</span> <span className="text-amber-400">WARN</span> Security scanner validated 24/7 power badge for listing #subsea_01.</p>
-            <p><span className="text-slate-500">[2026-08-04 11:45:00]</span> <span className="text-emerald-400">INFO</span> New roommate matching post generated for UNILAG Computer Science student.</p>
-          </div>
-        </div>
-      )}
-
-      {/* Tab 6: Admin Profile & Accounts Section */}
+      {/* TAB 5: PROFILE */}
       {activeTab === 'profile' && (
         <UserProfileSection />
       )}
 
+      {/* Agent Review Details Modal */}
+      {reviewAgent && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-xl space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                Verification Details
+              </h3>
+              <button
+                onClick={() => setReviewAgent(null)}
+                className="text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="flex items-center gap-3">
+                <img src={reviewAgent.photoUrl} alt="" className="w-16 h-16 rounded-xl object-cover" />
+                <div>
+                  <p className="font-bold text-sm text-slate-900 dark:text-slate-100">{reviewAgent.name}</p>
+                  <p className="text-slate-500 dark:text-slate-400">{reviewAgent.agentName}</p>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 space-y-1 text-slate-700 dark:text-slate-300">
+                <p><span className="font-semibold text-slate-900 dark:text-slate-100">University:</span> {reviewAgent.uni}</p>
+                <p><span className="font-semibold text-slate-900 dark:text-slate-100">Document Type:</span> {reviewAgent.docType}</p>
+                <p><span className="font-semibold text-slate-900 dark:text-slate-100">Reference:</span> {reviewAgent.docRef}</p>
+                <p><span className="font-semibold text-slate-900 dark:text-slate-100">Office Address:</span> {reviewAgent.officeAddress}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                onClick={() => {
+                  handleVerifyAgent(reviewAgent.id);
+                  setReviewAgent(null);
+                }}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs"
+              >
+                Confirm Verification
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

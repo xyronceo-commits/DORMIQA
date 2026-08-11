@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { updateFirestoreUserProfile } from '../lib/firebase';
 import { INITIAL_UNIVERSITIES } from '../data/mockData';
 import { 
   X, Lock, Mail, User, Phone, Building2, GraduationCap, ArrowRight, ShieldCheck, 
@@ -20,7 +21,9 @@ export const AuthModal: React.FC = () => {
     resetPasswordFirebase,
     resendVerificationEmail,
     checkVerificationStatus,
-    addToast 
+    addToast,
+    user,
+    setUser
   } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -42,6 +45,190 @@ export const AuthModal: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
+
+  // 6-Digit Verification Code state
+  const [codeDigits, setCodeDigits] = useState<string[]>(['', '', '', '', '', '']);
+  const [codeTimeLeft, setCodeTimeLeft] = useState<number>(600);
+  const [codeIsExpired, setCodeIsExpired] = useState<boolean>(false);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [codeSuccess, setCodeSuccess] = useState<boolean>(false);
+  const [codeResending, setCodeResending] = useState<boolean>(false);
+  const [codeResendCooldown, setCodeResendCooldown] = useState<number>(0);
+  const codeInputRefs = React.useRef<(HTMLInputElement | null)[]>([]);
+
+  // Send verification code when tab switches to email_verification_sent
+  React.useEffect(() => {
+    if (authModalTab === 'email_verification_sent' && email) {
+      handleSendVerificationCode(true);
+    }
+  }, [authModalTab, email]);
+
+  // Focus first input box on verification tab mount
+  React.useEffect(() => {
+    if (authModalTab === 'email_verification_sent' && !codeSuccess) {
+      setTimeout(() => {
+        codeInputRefs.current[0]?.focus();
+      }, 150);
+    }
+  }, [authModalTab, codeSuccess]);
+
+  // Live countdown timer (10:00 -> 00:00)
+  React.useEffect(() => {
+    if (authModalTab !== 'email_verification_sent' || codeIsExpired || codeSuccess) return;
+
+    if (codeTimeLeft <= 0) {
+      setCodeIsExpired(true);
+      setCodeError("This code has expired. Request a new code.");
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setCodeTimeLeft(prev => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [authModalTab, codeTimeLeft, codeIsExpired, codeSuccess]);
+
+  // Resend cooldown timer
+  React.useEffect(() => {
+    if (codeResendCooldown <= 0) return;
+    const interval = setInterval(() => {
+      setCodeResendCooldown(prev => prev - 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [codeResendCooldown]);
+
+  const handleSendVerificationCode = async (initial = false) => {
+    if (!email) return;
+    if (!initial && codeResendCooldown > 0) return;
+
+    setCodeResending(true);
+    setCodeError(null);
+
+    try {
+      const res = await fetch('/api/auth/send-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setCodeError(data.error || 'Failed to dispatch verification code.');
+        return;
+      }
+
+      setCodeTimeLeft(600);
+      setCodeIsExpired(false);
+      setCodeDigits(['', '', '', '', '', '']);
+      setCodeResendCooldown(60);
+
+      if (!initial) {
+        addToast('Verification Code Sent', `A new 6-digit code was sent to ${email}`, 'success');
+      }
+
+      setTimeout(() => {
+        codeInputRefs.current[0]?.focus();
+      }, 100);
+    } catch (err) {
+      setCodeError('Server error dispatching verification code.');
+    } finally {
+      setCodeResending(false);
+    }
+  };
+
+  const handleDigitChange = (index: number, value: string) => {
+    const cleanValue = value.replace(/[^0-9]/g, '');
+    if (!cleanValue && value !== '') return;
+
+    const newDigits = [...codeDigits];
+    newDigits[index] = cleanValue.slice(-1);
+    setCodeDigits(newDigits);
+    setCodeError(null);
+
+    if (cleanValue && index < 5) {
+      codeInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace') {
+      if (!codeDigits[index] && index > 0) {
+        codeInputRefs.current[index - 1]?.focus();
+      }
+    } else if (e.key === 'ArrowLeft' && index > 0) {
+      codeInputRefs.current[index - 1]?.focus();
+    } else if (e.key === 'ArrowRight' && index < 5) {
+      codeInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6);
+    if (!pastedData) return;
+
+    const newDigits = ['', '', '', '', '', ''];
+    for (let i = 0; i < pastedData.length; i++) {
+      newDigits[i] = pastedData[i];
+    }
+    setCodeDigits(newDigits);
+    setCodeError(null);
+
+    const nextFocusIndex = Math.min(pastedData.length, 5);
+    codeInputRefs.current[nextFocusIndex]?.focus();
+  };
+
+  const handleVerifyCodeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = codeDigits.join('');
+
+    if (code.length !== 6) {
+      setCodeError('Please enter all 6 digits of the code.');
+      return;
+    }
+
+    if (codeIsExpired) {
+      setCodeError('This code has expired. Request a new code.');
+      return;
+    }
+
+    setLoading(true);
+    setCodeError(null);
+
+    try {
+      const res = await fetch('/api/auth/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setCodeError(data.error || 'Incorrect code. Please try again.');
+        if (data.expired) setCodeIsExpired(true);
+        return;
+      }
+
+      setCodeSuccess(true);
+      addToast('Email Verified!', 'Your email address is now verified.', 'success');
+
+      if (user) {
+        setUser({ ...user, emailVerified: true });
+        updateFirestoreUserProfile(user.id, { emailVerified: true }).catch(() => {});
+      }
+
+      setTimeout(() => {
+        setAuthModalOpen(false);
+      }, 1500);
+    } catch (err) {
+      setCodeError('Verification failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!isAuthModalOpen) return null;
 
@@ -114,11 +301,11 @@ export const AuthModal: React.FC = () => {
           <div className="flex items-center justify-between p-4 sm:p-5 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 shrink-0">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-black text-white font-black flex items-center justify-center text-base shadow-sm">
-                C
+                D
               </div>
               <div>
                 <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
-                  {authModalTab === 'login' && 'Sign In to Campora'}
+                  {authModalTab === 'login' && 'Sign In to Dormiqa'}
                   {authModalTab === 'student_signup' && 'Student Account Sign Up'}
                   {authModalTab === 'agent_signup' && 'Property Agent Sign Up'}
                   {authModalTab === 'admin_login' && 'Admin Console Sign In'}
@@ -230,59 +417,116 @@ export const AuthModal: React.FC = () => {
             )}
 
             {authModalTab === 'email_verification_sent' ? (
-              <div className="text-center space-y-4 py-4">
-                <div className="w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 mx-auto flex items-center justify-center shadow-md">
-                  <Mail className="w-8 h-8" />
-                </div>
-                <div className="space-y-1">
-                  <h4 className="font-extrabold text-lg text-slate-900 dark:text-slate-100">Verification Link Sent ✉️</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-                    We dispatched a verification email to <span className="font-bold text-slate-800 dark:text-slate-200">{email}</span>. Please click the link in your email to confirm user legitimacy.
-                  </p>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 text-left text-xs space-y-2">
-                  <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-bold">
-                    <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Why verify your email?</span>
+              <div className="space-y-5 py-2">
+                {codeSuccess ? (
+                  <div className="text-center space-y-3 py-6">
+                    <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center">
+                      <CheckCircle2 className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                        Email Verified!
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Thank you for confirming <span className="font-semibold text-slate-800 dark:text-slate-200">{email}</span>.
+                      </p>
+                    </div>
                   </div>
-                  <ul className="text-[11px] text-slate-500 dark:text-slate-400 space-y-1 list-disc pl-4">
-                    <li>Protects the Campora student community against fake accounts.</li>
-                    <li>Ensures you receive inspection passes and booking confirmation details.</li>
-                    <li>Required for agent listing authorization.</li>
-                  </ul>
-                </div>
+                ) : (
+                  <>
+                    <div className="space-y-1 text-center">
+                      <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                        Verify your email
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Enter the 6-digit code we sent to <span className="font-semibold text-slate-800 dark:text-slate-200">{email || 'your email'}</span>.
+                      </p>
+                    </div>
 
-                <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2.5">
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const isVerified = await checkVerificationStatus();
-                      if (isVerified) {
-                        setAuthModalOpen(false);
-                      }
-                    }}
-                    className="w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2"
-                  >
-                    <CheckCircle2 className="w-4 h-4" /> I've Verified My Email
-                  </button>
+                    {codeError && (
+                      <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
+                        <span>{codeError}</span>
+                      </div>
+                    )}
 
-                  <button
-                    type="button"
-                    onClick={() => resendVerificationEmail()}
-                    className="w-full sm:w-auto px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors"
-                  >
-                    Resend Email
-                  </button>
-                </div>
+                    {/* 6 Digit Input Boxes */}
+                    <div className="flex items-center justify-center gap-1.5 sm:gap-2 pt-1">
+                      {codeDigits.map((digit, idx) => (
+                        <input
+                          key={idx}
+                          ref={el => (codeInputRefs.current[idx] = el)}
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={1}
+                          value={digit}
+                          onChange={e => handleDigitChange(idx, e.target.value)}
+                          onKeyDown={e => handleKeyDown(idx, e)}
+                          onPaste={handlePaste}
+                          disabled={loading || codeIsExpired}
+                          className={`w-10 h-12 sm:w-11 sm:h-12 text-center text-lg font-bold rounded-xl border transition-all ${
+                            digit
+                              ? 'border-emerald-600 dark:border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30 text-slate-900 dark:text-slate-100 shadow-xs'
+                              : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:border-emerald-500 focus:outline-none'
+                          } ${codeIsExpired ? 'border-rose-300 dark:border-rose-800 bg-rose-50/30 dark:bg-rose-950/20' : ''}`}
+                        />
+                      ))}
+                    </div>
 
-                <button
-                  type="button"
-                  onClick={() => setAuthModalOpen(false)}
-                  className="text-xs font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 pt-2 block mx-auto"
-                >
-                  Skip for now & explore
-                </button>
+                    {/* Countdown Timer */}
+                    <div className="text-center">
+                      {codeIsExpired ? (
+                        <p className="text-xs font-bold text-rose-600 dark:text-rose-400">
+                          This code has expired. Request a new code.
+                        </p>
+                      ) : (
+                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                          Code expires in <span className="font-bold text-slate-800 dark:text-slate-200">
+                            {Math.floor(Math.max(0, codeTimeLeft) / 60).toString().padStart(2, '0')}:
+                            {(Math.max(0, codeTimeLeft) % 60).toString().padStart(2, '0')}
+                          </span>
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Resend Link */}
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={() => handleSendVerificationCode(false)}
+                        disabled={codeResending || codeResendCooldown > 0}
+                        className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline disabled:opacity-50 inline-flex items-center gap-1 transition-opacity"
+                      >
+                        {codeResending ? (
+                          <div className="w-3 h-3 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                        ) : null}
+                        <span>
+                          {codeResendCooldown > 0
+                            ? `Resend code in ${codeResendCooldown}s`
+                            : "Didn't receive it? Resend code"}
+                        </span>
+                      </button>
+                    </div>
+
+                    {/* Verify Button */}
+                    <button
+                      type="button"
+                      onClick={handleVerifyCodeSubmit}
+                      disabled={loading || codeDigits.some(d => d === '') || codeIsExpired}
+                      className="w-full py-3 px-4 rounded-xl bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-xs disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {loading ? (
+                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <>
+                          <span>Verify</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+                  </>
+                )}
               </div>
             ) : authModalTab === 'forgot_password' && forgotSent ? (
               <div className="text-center space-y-3 py-4">
@@ -403,7 +647,7 @@ export const AuthModal: React.FC = () => {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder={authModalTab === 'admin_login' ? 'admin@campora.africa' : 'user@university.edu'}
+                      placeholder={authModalTab === 'admin_login' ? 'admin@dormiqa.africa' : 'user@university.edu'}
                       className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-semibold focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>

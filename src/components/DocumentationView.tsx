@@ -16,7 +16,7 @@ export const DocumentationView: React.FC = () => {
   };
 
   const dbSchemaCode = `
--- CAMPORA POSTGRESQL / SUPABASE DATABASE SCHEMA
+-- DORMIQA POSTGRESQL / SUPABASE DATABASE SCHEMA
 
 -- 1. Universities Table
 CREATE TABLE universities (
@@ -120,10 +120,10 @@ CREATE POLICY "Agents can manage own listings" ON listings FOR ALL USING (auth.u
           Technical Architecture & Database Specs
         </div>
         <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
-          Campora Platform Engineering Specification
+          Dormiqa Platform Engineering Specification
         </h1>
         <p className="text-xs sm:text-sm text-slate-300 max-w-3xl leading-relaxed">
-          Comprehensive overview of Campora’s database ER schema, API architecture, Supabase integration, Gemini AI prompt pipelines, and deployment instructions.
+          Comprehensive overview of Dormiqa’s database ER schema, API architecture, Supabase integration, Gemini AI prompt pipelines, and deployment instructions.
         </p>
       </div>
 

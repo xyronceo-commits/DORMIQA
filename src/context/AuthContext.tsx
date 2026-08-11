@@ -35,7 +35,7 @@ interface AuthContextType {
   signUpEmailFirebase: (email: string, pass: string, name: string, role: UserRole, extra?: Partial<User>) => Promise<void>;
   signInEmailFirebase: (email: string, pass: string) => Promise<void>;
   resetPasswordFirebase: (email: string) => Promise<void>;
-  resendVerificationEmail: () => Promise<void>;
+  resendVerificationEmail: (targetEmail?: string) => Promise<void>;
   checkVerificationStatus: () => Promise<boolean>;
   logout: () => void;
   savedAccounts: User[];
@@ -81,43 +81,21 @@ interface AuthContextType {
   openChatThread: (threadId: string) => void;
   requestNotificationPermission: () => Promise<void>;
   isFirebaseConnected: boolean;
+  isAdminModalOpen: boolean;
+  setIsAdminModalOpen: (open: boolean) => void;
+  adminToken: string | null;
+  adminLogin: (token: string, adminUser: User) => void;
+  adminLogout: () => void;
+  verificationModalOpen: boolean;
+  setVerificationModalOpen: (open: boolean) => void;
+  verificationEmail: string;
+  openVerificationModal: (email?: string) => void;
+  closeVerificationModal: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const INITIAL_ACCOUNTS_PRESET: User[] = [
-  {
-    id: 'stud_001',
-    email: 'tunde.b@student.unilag.edu.ng',
-    name: 'Tunde Bakare',
-    role: 'student',
-    universityId: 'uni_unilag',
-    universityName: 'University of Lagos',
-    phone: '+234 812 345 6789',
-    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80',
-    createdAt: '2025-09-01T08:00:00Z',
-  },
-  {
-    id: 'agent_001',
-    email: 'chidi.properties@campora.africa',
-    name: 'Chidi Okonkwo (Prime Hostels)',
-    role: 'agent',
-    phone: '+234 803 123 4567',
-    isVerifiedAgent: true,
-    verificationStatus: 'verified',
-    agentPhotoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-    createdAt: '2025-01-15T10:00:00Z',
-  },
-  {
-    id: 'admin_001',
-    email: 'admin@campora.africa',
-    name: 'Campora Platform Admin',
-    role: 'admin',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80',
-    createdAt: '2024-11-01T00:00:00Z',
-  }
-];
+const INITIAL_ACCOUNTS_PRESET: User[] = [];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [role, setRoleState] = useState<UserRole>('guest');
@@ -126,20 +104,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [savedAccounts, setSavedAccounts] = useState<User[]>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('campora_saved_accounts');
+      const saved = localStorage.getItem('dormiqa_saved_accounts') || localStorage.getItem('campora_saved_accounts');
       if (saved) {
         try { return JSON.parse(saved); } catch (e) { /* fallback */ }
       }
     }
-    return INITIAL_ACCOUNTS_PRESET;
+    return [];
   });
 
   const [savedListingIds, setSavedListingIds] = useState<string[]>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('campora_saved_listings');
-      return saved ? JSON.parse(saved) : ['list_001', 'list_003'];
+      const saved = localStorage.getItem('dormiqa_saved_listings') || localStorage.getItem('campora_saved_listings');
+      return saved ? JSON.parse(saved) : [];
     }
-    return ['list_001', 'list_003'];
+    return [];
   });
 
   const [selectedUniversity, setSelectedUniversity] = useState<University | null>(INITIAL_UNIVERSITIES[0]);
@@ -161,6 +139,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [chatTargetListing, setChatTargetListing] = useState<{ id: string; title: string; agentId: string; agentName: string } | null>(null);
   const [chatTargetThreadId, setChatTargetThreadId] = useState<string | null>(null);
 
+  // Admin Access & Session State
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [adminToken, setAdminToken] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('dormiqa_admin_token') || localStorage.getItem('campora_admin_token');
+    }
+    return null;
+  });
+
+  // Verification Code Modal State
+  const [verificationModalOpen, setVerificationModalOpen] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
+
+  const openVerificationModal = (targetEmail?: string) => {
+    const emailToUse = targetEmail || user?.email || '';
+    if (emailToUse) {
+      setVerificationEmail(emailToUse);
+      setVerificationModalOpen(true);
+    }
+  };
+
+  const closeVerificationModal = () => {
+    setVerificationModalOpen(false);
+  };
+
+  const adminLogin = (token: string, adminUser: User) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('dormiqa_admin_token', token);
+    }
+    setAdminToken(token);
+    setUser(adminUser);
+    setRoleState('admin');
+    setActiveView('admin_dashboard');
+  };
+
+  const adminLogout = () => {
+    if (adminToken) {
+      fetch('/api/admin/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: adminToken })
+      }).catch(() => {});
+    }
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('dormiqa_admin_token');
+      localStorage.removeItem('campora_admin_token');
+    }
+    setAdminToken(null);
+    setUser(null);
+    setRoleState('guest');
+    setActiveView('home');
+    addToast('Admin Signed Out', 'Secure admin session ended', 'info');
+  };
+
   const openChatWithListing = (listing: { id: string; title: string; agentId: string; agentName: string }) => {
     setChatTargetListing(listing);
     setChatTargetThreadId(null);
@@ -174,11 +206,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    localStorage.setItem('campora_saved_listings', JSON.stringify(savedListingIds));
+    localStorage.setItem('dormiqa_saved_listings', JSON.stringify(savedListingIds));
   }, [savedListingIds]);
 
   useEffect(() => {
-    localStorage.setItem('campora_saved_accounts', JSON.stringify(savedAccounts));
+    localStorage.setItem('dormiqa_saved_accounts', JSON.stringify(savedAccounts));
   }, [savedAccounts]);
 
   const addToast = (title: string, message?: string, type: 'success' | 'error' | 'info' | 'warning' = 'success') => {
@@ -234,7 +266,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           profile = {
             id: fUser.uid,
             email: fUser.email || '',
-            name: fUser.displayName || 'Campora User',
+            name: fUser.displayName || 'Dormiqa User',
             role: 'student',
             avatar: fUser.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
             createdAt: new Date().toISOString(),
@@ -297,7 +329,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(profile || {
         id: fUser.uid,
         email: fUser.email || '',
-        name: fUser.displayName || 'Campora User',
+        name: fUser.displayName || 'Dormiqa User',
         role: userRole,
         avatar: fUser.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
         createdAt: new Date().toISOString(),
@@ -328,7 +360,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const newUser = await registerWithEmail(email, pass, name, userRole, extra);
       setUser(newUser);
       setRoleState(newUser.role);
-      addToast('Verification Email Dispatched ✉️', `Check ${email} to verify your account legitimacy.`, 'info');
+      addToast('Verification Code Sent ✉️', `A 6-digit verification code has been dispatched to ${email}.`, 'info');
       setAuthModalTab('email_verification_sent');
 
       if (userRole === 'student') setActiveView('search');
@@ -341,32 +373,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const resendVerificationEmail = async () => {
+  const resendVerificationEmail = async (targetEmail?: string) => {
+    const emailToUse = targetEmail || user?.email || verificationEmail;
+    if (!emailToUse) {
+      addToast('Verification Error', 'No active email address available for code dispatch.', 'error');
+      return;
+    }
     try {
-      await resendFirebaseEmailVerification();
-      addToast('Verification Link Sent ✉️', 'A new verification email has been sent to your inbox.', 'info');
+      await resendFirebaseEmailVerification(emailToUse);
+      addToast('Verification Code Dispatched ✉️', `A 6-digit code was sent to ${emailToUse}`, 'info');
     } catch (err: any) {
-      addToast('Resend Failed', err.message || 'Unable to resend verification email.', 'error');
+      addToast('Resend Failed', err.message || 'Unable to resend verification code.', 'error');
     }
   };
 
   const checkVerificationStatus = async (): Promise<boolean> => {
-    try {
-      const verified = await checkFirebaseEmailVerified();
-      if (verified) {
-        if (user) {
-          const updated = { ...user, emailVerified: true };
-          setUser(updated);
-          await updateFirestoreUserProfile(user.id, { emailVerified: true });
-        }
-        addToast('Email Verified! ✅', 'Your account email has been verified successfully.', 'success');
-        return true;
-      } else {
-        addToast('Pending Verification', 'Email verification not completed yet. Please check your inbox and click the link.', 'warning');
-        return false;
-      }
-    } catch (err: any) {
-      console.error('Error checking verification:', err);
+    if (user?.emailVerified) {
+      addToast('Email Verified! ✅', 'Your account email is verified.', 'success');
+      return true;
+    } else {
+      openVerificationModal(user?.email);
+      addToast('Pending Verification ✉️', 'Please enter your 6-digit verification code.', 'info');
       return false;
     }
   };
@@ -380,7 +407,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(profile || {
         id: fUser.uid,
         email: fUser.email || email,
-        name: fUser.displayName || 'Campora User',
+        name: fUser.displayName || 'Dormiqa User',
         role: targetRole,
         avatar: fUser.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
         createdAt: new Date().toISOString()
@@ -600,6 +627,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         openChatThread,
         requestNotificationPermission,
         isFirebaseConnected,
+        isAdminModalOpen,
+        setIsAdminModalOpen,
+        adminToken,
+        adminLogin,
+        adminLogout,
+        verificationModalOpen,
+        setVerificationModalOpen,
+        verificationEmail,
+        openVerificationModal,
+        closeVerificationModal,
       }}
     >
       {children}

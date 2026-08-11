@@ -797,52 +797,7 @@ export const MOCK_EXTRA_UNIVERSITIES: University[] = [
   }
 ];
 
-export const INITIAL_AGENTS: User[] = [
-  {
-    id: 'agent_001',
-    email: 'chidi.properties@campora.ng',
-    name: 'Chidi Okonkwo (Prime Hostels Yaba)',
-    role: 'agent',
-    phone: '+234 803 123 4567',
-    isVerifiedAgent: true,
-    verificationStatus: 'verified',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-    createdAt: '2025-01-15T10:00:00Z',
-  },
-  {
-    id: 'agent_002',
-    email: 'adebayo.homes@campora.ng',
-    name: 'Adebayo Folorunsho (Apex Student Living)',
-    role: 'agent',
-    phone: '+234 802 987 6543',
-    isVerifiedAgent: true,
-    verificationStatus: 'verified',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
-    createdAt: '2025-02-01T08:30:00Z',
-  },
-  {
-    id: 'agent_003',
-    email: 'emeka.lodges@campora.ng',
-    name: 'Emeka Nwosu (South-East Campus Homes)',
-    role: 'agent',
-    phone: '+234 814 556 7788',
-    isVerifiedAgent: true,
-    verificationStatus: 'verified',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
-    createdAt: '2025-03-10T12:00:00Z',
-  },
-  {
-    id: 'agent_004',
-    email: 'fatima.estates@campora.ng',
-    name: 'Hajiya Fatima Bello (North-Central Student Realty)',
-    role: 'agent',
-    phone: '+234 806 444 1234',
-    isVerifiedAgent: true,
-    verificationStatus: 'verified',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80',
-    createdAt: '2026-04-01T14:15:00Z',
-  }
-];
+export const INITIAL_AGENTS: User[] = [];
 
 export const INITIAL_LISTINGS: Listing[] = [];
 

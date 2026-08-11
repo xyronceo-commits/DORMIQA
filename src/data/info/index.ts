@@ -41,7 +41,7 @@ export const CATEGORIES_META: DocCategoryMeta[] = [
   {
     id: 'company',
     name: 'Company & About',
-    description: 'About Campora, mission, vision, agent partner guide, careers, and press.',
+    description: 'About Dormiqa, mission, vision, agent partner guide, careers, and press.',
     iconName: 'Building'
   }
 ];

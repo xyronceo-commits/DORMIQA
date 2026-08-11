@@ -2,9 +2,9 @@ import { InfoDoc } from './legalDocs';
 
 export const COMPANY_DOCS: InfoDoc[] = [
   {
-    id: 'about-campora',
+    id: 'about-dormiqa',
     category: 'company',
-    title: 'About Campora',
+    title: 'About Dormiqa',
     subtitle: 'Building Africa’s most trusted student housing discovery ecosystem.',
     lastUpdated: 'August 1, 2026',
     iconName: 'Building',
@@ -12,18 +12,18 @@ export const COMPANY_DOCS: InfoDoc[] = [
       {
         title: '1. Who We Are',
         content: [
-          'Campora is Africa’s leading tech-enabled student accommodation search platform. Founded in Lagos, Nigeria, Campora was born out of a simple, universal student frustration: the painful, unsafe, and scam-ridden experience of searching for off-campus accommodation near university gates.'
+          'Dormiqa is Africa’s leading tech-enabled student accommodation search platform. Founded in Lagos, Nigeria, Dormiqa was born out of a simple, universal student frustration: the painful, unsafe, and scam-ridden experience of searching for off-campus accommodation near university gates.'
         ]
       },
       {
         title: '2. The Problem We Solve',
         content: [
           'Every year, millions of African tertiary students leave their home towns for university campuses. Limited on-campus hostel capacity leaves over 75% of students forced to navigate unregulated off-campus housing markets dominated by unverified middlemen, exorbitant hidden inspection fees, and rampant payment scams.',
-          'Campora solves this by replacing informal, high-risk search with a clean, verified, tech-driven platform connecting students directly with identity-verified property agents and landlords.'
+          'Dormiqa solves this by replacing informal, high-risk search with a clean, verified, tech-driven platform connecting students directly with identity-verified property agents and landlords.'
         ]
       },
       {
-        title: '3. What Distinguishes Campora',
+        title: '3. What Distinguishes Dormiqa',
         content: [
           '• Strict Identity Verification: Government ID and proof of property mandate checks for agents.',
           '• Zero Off-Platform Rent Holding: Students inspect physically and pay landlords directly.',
@@ -81,7 +81,7 @@ export const COMPANY_DOCS: InfoDoc[] = [
   {
     id: 'how-it-works',
     category: 'company',
-    title: 'How Campora Works',
+    title: 'How Dormiqa Works',
     subtitle: 'A step-by-step breakdown of how students and agents connect seamlessly.',
     lastUpdated: 'August 1, 2026',
     iconName: 'Compass',
@@ -101,7 +101,7 @@ export const COMPANY_DOCS: InfoDoc[] = [
       {
         title: 'Step 3: Agree & Move In',
         content: [
-          'Once satisfied with the room, utilities, and security, the student signs the tenancy agreement and pays rent directly to the landlord/agent. No middleman fees paid to Campora!'
+          'Once satisfied with the room, utilities, and security, the student signs the tenancy agreement and pays rent directly to the landlord/agent. No middleman fees paid to Dormiqa!'
         ]
       }
     ]
@@ -115,7 +115,7 @@ export const COMPANY_DOCS: InfoDoc[] = [
     iconName: 'UserCheck',
     sections: [
       {
-        title: 'Why List on Campora?',
+        title: 'Why List on Dormiqa?',
         content: [
           '• High Intent Leads: Receive direct inspection bookings from serious students in your university cluster.',
           '• Verified Trust Badge: Stand out from unverified middlemen and build a strong reputation.',
@@ -142,7 +142,7 @@ export const COMPANY_DOCS: InfoDoc[] = [
         title: 'Building the Future of PropTech in Africa',
         content: [
           'We are growing fast! While our full career portal is under construction, we are always eager to meet talented engineers, campus leads, community managers, and safety specialists.',
-          'To submit an open application or inquire about Campus Ambassador roles, email careers@campora.ng.'
+          'To submit an open application or inquire about Campus Ambassador roles, email careers@dormiqa.ng.'
         ]
       }
     ]
@@ -158,7 +158,7 @@ export const COMPANY_DOCS: InfoDoc[] = [
       {
         title: 'Media & Press Inquiries',
         content: [
-          'For interviews, high-res logos, brand color guidelines, or corporate announcements, please contact press@campora.ng.',
+          'For interviews, high-res logos, brand color guidelines, or corporate announcements, please contact press@dormiqa.ng.',
           'Our official press kit and downloadable brand assets repository will be released shortly.'
         ]
       }

@@ -41,7 +41,7 @@ export const OnboardingRoleSelect: React.FC = () => {
         </button>
 
         <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-          Welcome to <span className="text-indigo-600 dark:text-indigo-400">Campora</span>
+          Welcome to <span className="text-indigo-600 dark:text-indigo-400">Dormiqa</span>
         </h1>
         <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
           Select your role below to sign in or create an account. Choose whether you are a Tertiary Student or a Property Agent / Business Landlord.
@@ -188,7 +188,7 @@ export const OnboardingRoleSelect: React.FC = () => {
           <div className="space-y-1">
             <h4 className="font-extrabold text-base text-white">Agency & Business Verification Standard</h4>
             <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
-              Campora ensures student trust on campus. All hostel managers & property agents register their Business / Agency Name and upload proof of business (banner photo, logo, office building, or CAC) to obtain the Verified Gold Badge.
+              Dormiqa ensures student trust on campus. All hostel managers & property agents register their Business / Agency Name and upload proof of business (banner photo, logo, office building, or CAC) to obtain the Verified Gold Badge.
             </p>
           </div>
         </div>

@@ -7,7 +7,6 @@ import {
   createUserWithEmailAndPassword, 
   signOut as firebaseSignOut, 
   sendPasswordResetEmail, 
-  sendEmailVerification,
   onAuthStateChanged,
   updateProfile as firebaseUpdateProfile,
   User as FirebaseUser
@@ -47,6 +46,53 @@ export const auth = getAuth(app);
 export const storage = getStorage(app);
 export { onAuthStateChanged };
 
+export enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+export interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+    tenantId?: string | null;
+    providerInfo?: {
+      providerId?: string | null;
+      email?: string | null;
+    }[];
+  };
+}
+
+export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null): never {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
+      providerInfo: auth.currentUser?.providerData?.map(provider => ({
+        providerId: provider.providerId,
+        email: provider.email,
+      })) || []
+    },
+    operationType,
+    path
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
+
 export async function uploadFileToFirebaseStorage(path: string, file: File): Promise<string> {
   try {
     const fileRef = storageRef(storage, path);
@@ -85,26 +131,30 @@ export async function loginWithGoogle(preferredRole: UserRole = 'student'): Prom
   
   // Create or update Firestore user document
   const userRef = doc(db, 'users', user.uid);
-  const userDoc = await getDoc(userRef);
-  
-  if (!userDoc.exists()) {
-    await setDoc(userRef, {
-      id: user.uid,
-      email: user.email || '',
-      name: user.displayName || 'Campora User',
-      role: preferredRole,
-      avatar: user.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
-      createdAt: new Date().toISOString(),
-      isVerifiedAgent: preferredRole === 'agent',
-      verificationStatus: preferredRole === 'agent' ? 'verified' : 'none',
-      fcmToken: null,
-    });
-  } else if (preferredRole && userDoc.data()?.role !== preferredRole) {
-    // Merge role if user explicitly selected agent or student sign in/up
-    await setDoc(userRef, { 
-      role: preferredRole,
-      isVerifiedAgent: preferredRole === 'agent' ? true : (userDoc.data()?.isVerifiedAgent || false)
-    }, { merge: true });
+  try {
+    const userDoc = await getDoc(userRef);
+    
+    if (!userDoc.exists()) {
+      await setDoc(userRef, {
+        id: user.uid,
+        email: user.email || '',
+        name: user.displayName || 'Dormiqa User',
+        role: preferredRole,
+        avatar: user.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+        createdAt: new Date().toISOString(),
+        isVerifiedAgent: preferredRole === 'agent',
+        verificationStatus: preferredRole === 'agent' ? 'verified' : 'none',
+        fcmToken: null,
+      });
+    } else if (preferredRole && userDoc.data()?.role !== preferredRole) {
+      // Merge role if user explicitly selected agent or student sign in/up
+      await setDoc(userRef, { 
+        role: preferredRole,
+        isVerifiedAgent: preferredRole === 'agent' ? true : (userDoc.data()?.isVerifiedAgent || false)
+      }, { merge: true });
+    }
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}`);
   }
   
   return user;
@@ -124,13 +174,6 @@ export async function registerWithEmail(
     await firebaseUpdateProfile(fUser, { displayName: name });
   }
 
-  // Dispatch Firebase Email Verification
-  try {
-    await sendEmailVerification(fUser);
-  } catch (e) {
-    console.warn('Firebase sendEmailVerification notice:', e);
-  }
-
   const userObj: User = {
     id: fUser.uid,
     email: fUser.email || email,
@@ -144,15 +187,27 @@ export async function registerWithEmail(
     ...additionalData,
   };
 
-  await setDoc(doc(db, 'users', fUser.uid), userObj);
+  try {
+    await setDoc(doc(db, 'users', fUser.uid), userObj);
+  } catch (err) {
+    console.warn('Firestore setDoc user creation notice:', err);
+  }
   return userObj;
 }
 
-export async function resendFirebaseEmailVerification(): Promise<void> {
-  if (auth.currentUser) {
-    await sendEmailVerification(auth.currentUser);
-  } else {
-    throw new Error('No active user logged in to resend email verification.');
+export async function resendFirebaseEmailVerification(targetEmail?: string): Promise<void> {
+  const emailToUse = targetEmail || auth.currentUser?.email;
+  if (!emailToUse) {
+    throw new Error('No active email address provided for verification code dispatch.');
+  }
+  const res = await fetch('/api/auth/send-verification', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: emailToUse })
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.error || 'Failed to dispatch 6-digit verification code.');
   }
 }
 
@@ -334,13 +389,14 @@ export async function updateInspectionStatusInFirestore(bookingId: string, statu
 // Real-time Notifications Listener
 export function subscribeFirestoreNotifications(userId: string, callback: (notifications: NotificationItem[]) => void) {
   const notifRef = collection(db, 'notifications');
-  const q = query(notifRef, where('userId', 'in', [userId, 'all']), orderBy('timestamp', 'desc'), limit(30));
+  const q = query(notifRef, where('userId', 'in', [userId, 'all']), limit(50));
 
   return onSnapshot(q, (snapshot) => {
     const items: NotificationItem[] = [];
     snapshot.forEach((d) => {
       items.push({ id: d.id, ...d.data() } as NotificationItem);
     });
+    items.sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
     callback(items);
   }, (err) => {
     console.warn('Notifications subscription warning:', err);
@@ -433,13 +489,14 @@ export function subscribeFirestoreThreads(userId: string, isAgent: boolean, call
 
 export function subscribeFirestoreMessages(threadId: string, callback: (messages: Message[]) => void) {
   const ref = collection(db, 'messages');
-  const q = query(ref, where('threadId', '==', threadId), orderBy('timestamp', 'asc'));
+  const q = query(ref, where('threadId', '==', threadId));
 
   return onSnapshot(q, (snapshot) => {
     const items: Message[] = [];
     snapshot.forEach((d) => {
       items.push({ id: d.id, ...d.data() } as Message);
     });
+    items.sort((a, b) => new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime());
     callback(items);
   }, (err) => {
     console.warn('Messages subscription warning:', err);

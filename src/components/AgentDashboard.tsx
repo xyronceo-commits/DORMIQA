@@ -28,64 +28,10 @@ export const AgentDashboard: React.FC = () => {
   const [isSalesModalOpen, setIsSalesModalOpen] = useState(false);
 
   // Special Student Requests State
-  const [specialRequests, setSpecialRequests] = useState([
-    {
-      id: 'req_101',
-      studentName: 'Chinedu Okafor',
-      studentPhone: '+234 812 345 6789',
-      studentEmail: 'chinedu.o@unilag.edu.ng',
-      universityName: 'University of Lagos (UNILAG)',
-      requestType: 'Custom Budget Search',
-      budgetMax: 350000,
-      details: 'Looking for a quiet single room or self-contain near UNILAG backgate under ₦350,000/yr. Needs 24/7 power for medical studies.',
-      date: 'Today, 09:20 AM',
-      status: 'new'
-    },
-    {
-      id: 'req_102',
-      studentName: 'Fatima Bello',
-      studentPhone: '+234 809 876 5432',
-      studentEmail: 'fatima.b@abu.edu.ng',
-      universityName: 'Ahmadu Bello University (ABU)',
-      requestType: 'Roommate Matching',
-      budgetMax: 180000,
-      details: 'Seeking female roommate to share a 2-bedroom flat near Samaru gate. Budget ₦180,000 per student.',
-      date: 'Yesterday',
-      status: 'contacted'
-    },
-    {
-      id: 'req_103',
-      studentName: 'Adesewa Ademola',
-      studentPhone: '+234 814 555 1212',
-      studentEmail: 'a.ademola@oauife.edu.ng',
-      universityName: 'Obafemi Awolowo University (OAU)',
-      requestType: 'Emergency Relocation',
-      budgetMax: 400000,
-      details: 'Urgent accommodation relocation request: Self-contain apartment around Parakin gate with private bathroom and running water.',
-      date: '2 days ago',
-      status: 'new'
-    }
-  ]);
+  const [specialRequests, setSpecialRequests] = useState<any[]>([]);
 
   // Phone Number Requests State
-  const [phoneRequests, setPhoneRequests] = useState([
-    {
-      id: 'ph_01',
-      studentName: 'Emmanuel Nwachukwu',
-      studentPhone: '+234 803 999 1122',
-      listingTitle: 'Subsea Deluxe Self Contain',
-      timestamp: '10 mins ago',
-      note: 'Requested agent direct phone number to inquire about caution deposit and payment installment terms.'
-    },
-    {
-      id: 'ph_02',
-      studentName: 'Grace Akpan',
-      studentPhone: '+234 816 777 4433',
-      listingTitle: 'Royal Palms Private Hostel',
-      timestamp: '1 hour ago',
-      note: 'Requested agent WhatsApp number for virtual video walk-through tour.'
-    }
-  ]);
+  const [phoneRequests, setPhoneRequests] = useState<any[]>([]);
 
   // Add Listing Wizard State
   const [wizardTitle, setWizardTitle] = useState('Subsea Deluxe Hostel');
@@ -292,7 +238,7 @@ export const AgentDashboard: React.FC = () => {
     }
 
     setLoading(true);
-    addToast('Publishing Listing...', 'Campora AI is auditing your listing in real-time... ⚡', 'info');
+    addToast('Publishing Listing...', 'Dormiqa AI is auditing your listing in real-time... ⚡', 'info');
 
     try {
       const selectedUni = INITIAL_UNIVERSITIES.find(u => u.id === wizardUniId)!;
@@ -323,7 +269,7 @@ export const AgentDashboard: React.FC = () => {
         agentId: user?.id || 'agent_01',
         agentName: user?.name || agencyName,
         agentPhone: user?.phone || '+234 803 111 2222',
-        agentEmail: user?.email || 'agent@campora.africa',
+        agentEmail: user?.email || 'agent@dormiqa.africa',
         agentAvatar: user?.avatar || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=200&q=80',
         coordinates: selectedUni.coordinates,
         address: wizardAddress,
@@ -366,7 +312,7 @@ export const AgentDashboard: React.FC = () => {
           userId: user?.id || 'agent_01',
           type: 'system',
           title: 'Listing Approved! 🎉',
-          body: `Your hostel listing "${wizardTitle}" has been verified by Campora AI and is now live on student timelines!`,
+          body: `Your hostel listing "${wizardTitle}" has been verified by Dormiqa AI and is now live on student timelines!`,
           read: false,
         });
       } else {
@@ -400,7 +346,7 @@ export const AgentDashboard: React.FC = () => {
   };
 
   const handleReReviewListing = async (listing: Listing) => {
-    addToast('Re-assessing Listing...', 'Campora AI is auditing your listing... ⚡', 'info');
+    addToast('Re-assessing Listing...', 'Dormiqa AI is auditing your listing... ⚡', 'info');
     try {
       const result = await reviewListingWithAi({
         id: listing.id,
@@ -1249,7 +1195,7 @@ export const AgentDashboard: React.FC = () => {
 
                 <div className="flex items-center justify-between pt-2">
                   <a
-                    href={`https://wa.me/${req.studentPhone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(req.studentName)},%20I%20am%20a%20verified%20Campora%20agent.%20I%20saw%20your%20special%20accommodation%20request%20for%20${encodeURIComponent(req.universityName)}.`}
+                    href={`https://wa.me/${req.studentPhone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(req.studentName)},%20I%20am%20a%20verified%20Dormiqa%20agent.%20I%20saw%20your%20special%20accommodation%20request%20for%20${encodeURIComponent(req.universityName)}.`}
                     target="_blank"
                     rel="noreferrer"
                     className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center gap-2 transition-colors shadow-sm"
@@ -1471,7 +1417,7 @@ export const AgentDashboard: React.FC = () => {
           <div className="p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm space-y-2">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Verified Status</span>
             <p className="text-2xl font-black text-amber-500 flex items-center gap-1.5">
-              <ShieldCheck className="w-6 h-6" /> Campora Gold
+              <ShieldCheck className="w-6 h-6" /> Dormiqa Gold
             </p>
             <p className="text-[11px] text-slate-500">100% verified agent trust badge granted</p>
           </div>
@@ -1487,7 +1433,7 @@ export const AgentDashboard: React.FC = () => {
             <div>
               <h3 className="font-extrabold text-lg text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <Award className="w-5 h-5 text-amber-500" />
-                Apply for Campora Verified Agent Gold Badge
+                Apply for Dormiqa Verified Agent Gold Badge
               </h3>
               <p className="text-xs text-slate-500 mt-1">
                 Verified agents get 4x more inspection bookings from students and a gold shield badge on all property listings.

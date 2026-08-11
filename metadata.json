@@ -1,6 +1,6 @@
 {
-  "name": "Campora",
-  "description": "Student accommodation platform connecting students with verified agents for hostels, apartments, and lodges near universities.",
+  "name": "Dormiqa",
+  "description": "Student accommodation, made simpler. Connecting students with verified agents for hostels, apartments, and lodges near universities.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

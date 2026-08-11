@@ -41,7 +41,7 @@ export function cleanBotReply(text: string): string {
   return cleaned.trim();
 }
 
-export async function chatWithCamporaBot(message: string, history?: any[]): Promise<string> {
+export async function chatWithDormiqaBot(message: string, history?: any[]): Promise<string> {
   try {
     const res = await fetch('/api/gemini/chat', {
       method: 'POST',
@@ -53,9 +53,11 @@ export async function chatWithCamporaBot(message: string, history?: any[]): Prom
     return cleanBotReply(data.reply || '');
   } catch (err) {
     console.warn('AI chat error', err);
-    return 'Hello! I am Campora AI Assistant. You can search hostels, schedule physical inspections, or contact verified agents safely through Campora!';
+    return 'Hello! I am Dormiqa AI Assistant. You can search hostels, schedule physical inspections, or contact verified agents safely through Dormiqa!';
   }
 }
+
+export const chatWithCamporaBot = chatWithDormiqaBot;
 
 export async function generateListingDescription(listingInfo: {
   title: string;
@@ -123,7 +125,7 @@ export async function reviewListingWithAi(listing: {
     return {
       approved: true,
       status: 'active',
-      reason: 'Listing verified and approved for publication on Campora student timeline.',
+      reason: 'Listing verified and approved for publication on Dormiqa student timeline.',
       riskScore: 0
     };
   }

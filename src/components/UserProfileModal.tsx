@@ -450,7 +450,7 @@ export const UserProfileModal: React.FC = () => {
                     Add Another Account
                   </h3>
                   <p className="text-[11px] text-slate-500">
-                    Register or log into a new Student, Agent, or Admin account on Campora.
+                    Register or log into a new Student, Agent, or Admin account on Dormiqa.
                   </p>
                 </div>
 
@@ -506,7 +506,7 @@ export const UserProfileModal: React.FC = () => {
                       type="email"
                       value={addAccountEmail}
                       onChange={e => setAddAccountEmail(e.target.value)}
-                      placeholder="e.g. user@unilag.edu.ng or agent@campora.africa"
+                      placeholder="e.g. user@unilag.edu.ng or agent@dormiqa.africa"
                       className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 font-semibold text-xs text-slate-900 dark:text-slate-100"
                       required
                     />

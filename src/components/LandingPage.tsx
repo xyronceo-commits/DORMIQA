@@ -61,14 +61,6 @@ export const LandingPage: React.FC = () => {
       {/* 1. HERO SECTION - Clean product focus */}
       <section className="bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800 pt-6 pb-12 sm:pt-10 sm:pb-16 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto text-center space-y-6">
-          
-          {/* Status pill */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs font-medium text-neutral-800 dark:text-neutral-200">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-            <span>Verified Student Accommodation in Nigeria</span>
-            <span className="text-neutral-300 dark:text-neutral-700">•</span>
-            <span className="text-emerald-700 dark:text-emerald-400 font-bold">Verified Campus Accommodations</span>
-          </div>
 
           {/* Headline */}
           <h1 className="text-3xl sm:text-5xl lg:text-5xl font-black tracking-tight text-neutral-900 dark:text-white leading-[1.12]">
@@ -77,7 +69,7 @@ export const LandingPage: React.FC = () => {
 
           {/* Subtext */}
           <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-2xl mx-auto">
-            Campora connects university, polytechnic, and college students with verified landlords and agents for hostels, self-contains, and lodges. Inspect physically before making any rent payment.
+            Dormiqa connects university, polytechnic, and college students with verified landlords and agents for hostels, self-contains, and lodges. Inspect physically before making any rent payment.
           </p>
 
           {/* Primary Search Bar */}
@@ -267,7 +259,7 @@ export const LandingPage: React.FC = () => {
         )}
       </section>
 
-      {/* 4. COMPARISON TABLE - Traditional vs Campora (Clear, practical, no hype) */}
+      {/* 4. COMPARISON TABLE - Traditional vs Dormiqa (Clear, practical, no hype) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 sm:p-8 space-y-6">
           <div className="max-w-xl space-y-1">
@@ -275,7 +267,7 @@ export const LandingPage: React.FC = () => {
               Designed For Nigerian Tertiary Students
             </span>
             <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">
-              Why Students Choose Campora
+              Why Students Choose Dormiqa
             </h2>
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
               We eliminated non-refundable registration fees, unverified agents, and fake location descriptions.
@@ -288,7 +280,7 @@ export const LandingPage: React.FC = () => {
                 <tr className="border-b border-neutral-200 dark:border-neutral-800 text-neutral-400 font-semibold uppercase tracking-wider text-[11px]">
                   <th className="py-3 px-3">Feature</th>
                   <th className="py-3 px-3 text-neutral-500 dark:text-neutral-400">Traditional Agents</th>
-                  <th className="py-3 px-3 text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50/50 dark:bg-emerald-950/20 rounded-t-xl">Campora Standard</th>
+                  <th className="py-3 px-3 text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50/50 dark:bg-emerald-950/20 rounded-t-xl">Dormiqa Standard</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/80">

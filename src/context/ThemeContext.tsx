@@ -25,7 +25,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // User selected theme preference ('light' | 'dark' | 'system')
   const [theme, setThemeState] = useState<ThemeMode>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('campora_theme') as ThemeMode;
+      const saved = (localStorage.getItem('dormiqa_theme') || localStorage.getItem('campora_theme')) as ThemeMode;
       if (saved && ['light', 'dark', 'system'].includes(saved)) {
         return saved;
       }
@@ -94,7 +94,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     metaColorScheme.setAttribute('content', theme === 'system' ? 'light dark' : effectiveTheme);
 
-    localStorage.setItem('campora_theme', theme);
+    localStorage.setItem('dormiqa_theme', theme);
   }, [theme, effectiveTheme]);
 
   const setTheme = (mode: ThemeMode) => {

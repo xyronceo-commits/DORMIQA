@@ -148,7 +148,7 @@ export const UserProfilePage: React.FC = () => {
     e.preventDefault();
     setAuthLoading(true);
     try {
-      await signUpEmailFirebase(authEmail, authPassword, authName || 'Campora User', authRole, {
+      await signUpEmailFirebase(authEmail, authPassword, authName || 'Dormiqa User', authRole, {
         isVerifiedAgent: authRole === 'agent'
       });
       addToast('Account Registered', 'Your new account was created successfully.');

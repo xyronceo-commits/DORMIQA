@@ -34,7 +34,7 @@ export const InspectionModal: React.FC = () => {
         studentId: user?.id || 'stud_current',
         studentName: user?.name || 'Student Inspector',
         studentPhone: user?.phone || '+234 810 000 0000',
-        studentEmail: user?.email || 'student@campora.africa',
+        studentEmail: user?.email || 'student@dormiqa.africa',
         agentId: inspectionModalListing.agentId,
         agentName: inspectionModalListing.agentName,
         agentPhone: inspectionModalListing.agentPhone,

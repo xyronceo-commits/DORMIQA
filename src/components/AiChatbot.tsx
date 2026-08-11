@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { chatWithCamporaBot } from '../lib/gemini';
+import { chatWithDormiqaBot } from '../lib/gemini';
 import { 
   Bot, Sparkles, X, Send, User, ChevronDown, ShieldCheck, HelpCircle, 
   Code, Copy, Check, Terminal, CheckCircle2, Info, List, FileText 
@@ -372,7 +372,7 @@ export const AiChatbot: React.FC = () => {
     {
       id: 'msg_welcome',
       sender: 'bot',
-      text: "👋 Hi! I'm Campora AI Assistant. I can help you search verified hostels, guide you on campus safety, or give tips on inspecting student apartments. How can I help today?",
+      text: "👋 Hi! I'm Dormiqa AI Assistant. I can help you search verified hostels, guide you on campus safety, or give tips on inspecting student apartments. How can I help today?",
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     }
   ]);
@@ -407,7 +407,7 @@ export const AiChatbot: React.FC = () => {
         parts: [{ text: m.text }]
       }));
 
-      const reply = await chatWithCamporaBot(query, history);
+      const reply = await chatWithDormiqaBot(query, history);
 
       const botMsg: ChatMessage = {
         id: `bot_${Date.now()}`,
@@ -423,7 +423,7 @@ export const AiChatbot: React.FC = () => {
         {
           id: `bot_${Date.now()}`,
           sender: 'bot',
-          text: 'Sorry, I ran into an error connecting to Campora AI. Please try again.',
+          text: 'Sorry, I ran into an error connecting to Dormiqa AI. Please try again.',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         }
       ]);
@@ -434,7 +434,7 @@ export const AiChatbot: React.FC = () => {
 
   const quickPrompts = [
     "Safety checklist for hostel inspection?",
-    "How does Campora verify agents?",
+    "How does Dormiqa verify agents?",
     "Questions to ask landlord before moving in?"
   ];
 
@@ -447,10 +447,10 @@ export const AiChatbot: React.FC = () => {
           animate={{ scale: 1, opacity: 1 }}
           onClick={() => setIsOpen(true)}
           className="fixed bottom-6 right-6 z-[70] p-4 rounded-full bg-slate-900 dark:bg-emerald-600 text-white shadow-2xl hover:scale-105 transition-transform flex items-center gap-2 group border border-slate-700/50"
-          title="Campora AI Assistant"
+          title="Dormiqa AI Assistant"
         >
           <Sparkles className="w-5 h-5 text-emerald-400 group-hover:rotate-12 transition-transform" />
-          <span className="font-bold text-xs pr-1 hidden sm:inline">Ask Campora AI</span>
+          <span className="font-bold text-xs pr-1 hidden sm:inline">Ask Dormiqa AI</span>
         </motion.button>
       )}
 
@@ -471,7 +471,7 @@ export const AiChatbot: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="font-bold text-sm flex items-center gap-1.5">
-                    Campora Assistant
+                    Dormiqa Assistant
                     <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-semibold border border-emerald-500/30">
                       Smart AI
                     </span>

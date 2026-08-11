@@ -73,7 +73,7 @@ export const ReportModal: React.FC = () => {
               </div>
               <h4 className="text-xl font-bold text-slate-900 dark:text-slate-100">Report Received</h4>
               <p className="text-sm text-slate-600 dark:text-slate-300">
-                Thank you for helping keep Campora safe for African students.
+                Thank you for helping keep Dormiqa safe for African students.
               </p>
             </div>
           ) : (

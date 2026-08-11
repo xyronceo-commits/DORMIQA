@@ -19,6 +19,8 @@ import { BusinessVerificationPage } from './components/BusinessVerificationPage'
 import { InfoHub } from './components/InfoHub';
 import { AiChatbot } from './components/AiChatbot';
 import { RealtimeChatModal } from './components/RealtimeChatModal';
+import { AdminLoginModal } from './components/AdminLoginModal';
+import { VerificationCodeModal } from './components/VerificationCodeModal';
 import { ToastContainer } from './components/ToastContainer';
 import { MobileBottomNav } from './components/MobileBottomNav';
 
@@ -43,7 +45,7 @@ const MainContent: React.FC = () => {
       {activeView === 'student_dashboard' && user && <StudentDashboard />}
       {activeView === 'agent_dashboard' && user && <AgentDashboard />}
       {activeView === 'agent_verification' && user && <BusinessVerificationPage />}
-      {activeView === 'admin_dashboard' && user && <AdminDashboard />}
+      {activeView === 'admin_dashboard' && user?.role === 'admin' && <AdminDashboard />}
       {(activeView === 'role_select' || activeView === 'onboarding') && <OnboardingRoleSelect />}
     </main>
   );
@@ -57,6 +59,27 @@ const GlobalChatModalContainer: React.FC = () => {
       onClose={() => setChatModalOpen(false)}
       initialListing={chatTargetListing || undefined}
       targetThreadId={chatTargetThreadId || undefined}
+    />
+  );
+};
+
+const GlobalAdminModalContainer: React.FC = () => {
+  const { isAdminModalOpen, setIsAdminModalOpen } = useAuth();
+  return (
+    <AdminLoginModal
+      isOpen={isAdminModalOpen}
+      onClose={() => setIsAdminModalOpen(false)}
+    />
+  );
+};
+
+const GlobalVerificationModalContainer: React.FC = () => {
+  const { verificationModalOpen, closeVerificationModal, verificationEmail } = useAuth();
+  return (
+    <VerificationCodeModal
+      isOpen={verificationModalOpen}
+      onClose={closeVerificationModal}
+      email={verificationEmail}
     />
   );
 };
@@ -80,6 +103,8 @@ export default function App() {
           <AuthModal />
           <UserProfileModal />
           <GlobalChatModalContainer />
+          <GlobalAdminModalContainer />
+          <GlobalVerificationModalContainer />
           <AiChatbot />
           <ToastContainer />
         </div>

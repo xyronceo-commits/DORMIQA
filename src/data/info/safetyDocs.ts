@@ -5,14 +5,14 @@ export const SAFETY_DOCS: InfoDoc[] = [
     id: 'community-guidelines',
     category: 'safety',
     title: 'Community Guidelines',
-    subtitle: 'Standards for safe, respectful, and constructive interaction on Campora.',
+    subtitle: 'Standards for safe, respectful, and constructive interaction on Dormiqa.',
     lastUpdated: 'August 1, 2026',
     iconName: 'Users',
     sections: [
       {
         title: '1. Respect and Inclusivity',
         content: [
-          'Campora is built to serve students from all backgrounds, regions, and cultures across Africa. Harassment, hate speech, bullying, or discrimination based on tribe, state of origin, religion, gender, or disability is strictly banned.'
+          'Dormiqa is built to serve students from all backgrounds, regions, and cultures across Africa. Harassment, hate speech, bullying, or discrimination based on tribe, state of origin, religion, gender, or disability is strictly banned.'
         ]
       },
       {
@@ -40,7 +40,7 @@ export const SAFETY_DOCS: InfoDoc[] = [
       {
         title: '1. Why Verification Matters',
         content: [
-          'Off-campus housing fraud is a major challenge for university students. Campora’s Verification Policy safeguards students by ensuring that agents are real, identity-verified individuals with legitimate access to accommodation.'
+          'Off-campus housing fraud is a major challenge for university students. Dormiqa’s Verification Policy safeguards students by ensuring that agents are real, identity-verified individuals with legitimate access to accommodation.'
         ]
       },
       {
@@ -52,7 +52,7 @@ export const SAFETY_DOCS: InfoDoc[] = [
       {
         title: '3. Property Listing Verification Steps',
         content: [
-          'Listings undergo automated and human review. Higher-tier Verified Listings require geotagged photos, proof of management authorization, or physical audit by Campora campus ambassadors.'
+          'Listings undergo automated and human review. Higher-tier Verified Listings require geotagged photos, proof of management authorization, or physical audit by Dormiqa campus ambassadors.'
         ]
       },
       {
@@ -102,7 +102,7 @@ export const SAFETY_DOCS: InfoDoc[] = [
       {
         title: '1. Genuine Student Reviews',
         content: [
-          'Reviews on Campora must be posted by verified students who have inspected or resided in the property.'
+          'Reviews on Dormiqa must be posted by verified students who have inspected or resided in the property.'
         ]
       },
       {
@@ -114,7 +114,7 @@ export const SAFETY_DOCS: InfoDoc[] = [
       {
         title: '3. Moderation & Removal Criteria',
         content: [
-          'Campora removes reviews that contain profanity, personal address leaks, extortion threats, or irrelevant marketing spam.'
+          'Dormiqa removes reviews that contain profanity, personal address leaks, extortion threats, or irrelevant marketing spam.'
         ]
       }
     ]
@@ -130,7 +130,7 @@ export const SAFETY_DOCS: InfoDoc[] = [
       {
         title: '1. Zero Tolerance for Rental Fraud',
         content: [
-          'Campora enforces a strict zero-tolerance policy regarding rental scams, advance-fee fraud, fake photo upload, and agent identity theft.'
+          'Dormiqa enforces a strict zero-tolerance policy regarding rental scams, advance-fee fraud, fake photo upload, and agent identity theft.'
         ]
       },
       {
@@ -142,7 +142,7 @@ export const SAFETY_DOCS: InfoDoc[] = [
       {
         title: '3. Reporting Scammers & Law Enforcement Cooperation',
         content: [
-          'When fraud is detected, Campora freezes the implicated account, preserves server logs and government ID records, and cooperates fully with police and anti-fraud law enforcement agencies.'
+          'When fraud is detected, Dormiqa freezes the implicated account, preserves server logs and government ID records, and cooperates fully with police and anti-fraud law enforcement agencies.'
         ]
       }
     ]

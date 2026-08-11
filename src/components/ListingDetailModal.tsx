@@ -598,7 +598,7 @@ export const ListingDetailModal: React.FC = () => {
                       {selectedListing.isAgentVerified ? (
                         <span className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
                           <ShieldCheck className="w-3.5 h-3.5" />
-                          Verified Campora Agent
+                          Verified Dormiqa Agent
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 font-semibold mt-0.5">
@@ -653,7 +653,7 @@ export const ListingDetailModal: React.FC = () => {
 
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center leading-normal">
                     <Lock className="w-3 h-3 inline mr-1 text-emerald-500" />
-                    Campora does NOT process rent payments. Inspect in person before making agreements!
+                    Dormiqa does NOT process rent payments. Inspect in person before making agreements!
                   </p>
 
                   {/* Report Button */}

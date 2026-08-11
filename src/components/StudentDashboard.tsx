@@ -37,42 +37,7 @@ export const StudentDashboard: React.FC = () => {
   const [calcMonthlyUtility, setCalcMonthlyUtility] = useState<number>(5000);
 
   // Roommate Posts State
-  const [roommatePosts, setRoommatePosts] = useState<RoommatePost[]>([
-    {
-      id: 'rm_1',
-      studentId: 'st_88',
-      studentName: 'Chidinma O.',
-      studentAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-      universityName: 'University of Lagos (UNILAG)',
-      department: 'Computer Science',
-      level: '300 Level',
-      gender: 'Female',
-      budgetPerHead: 220000,
-      location: 'Akoka / Yaba Gate',
-      roomType: 'Self-Contain Shared (2 Girls)',
-      description: 'Looking for a clean, quiet female roommate to share a spacious self-contain with running borehole water and inverter connection near UNILAG gate.',
-      preferredQualities: ['Non-smoker', 'Quiet study hours', 'Clean & Organized'],
-      contactPhone: '+234 812 345 6789',
-      createdAt: '2 days ago',
-    },
-    {
-      id: 'rm_2',
-      studentId: 'st_89',
-      studentName: 'Tunde Bakare',
-      studentAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
-      universityName: 'Obafemi Awolowo University (OAU)',
-      department: 'Electrical Engineering',
-      level: '400 Level',
-      gender: 'Male',
-      budgetPerHead: 180000,
-      location: 'Asher / Parakin, Ile-Ife',
-      roomType: '2 Bedroom Flat (1 Room Available)',
-      description: 'Need a respectful male student to occupy the second bedroom in my 2-bedroom flat. Constant water, prepaid meter, paved compound.',
-      preferredQualities: ['Responsible', 'Pays bills on time', 'Friendly'],
-      contactPhone: '+234 803 987 6543',
-      createdAt: '1 day ago',
-    },
-  ]);
+  const [roommatePosts, setRoommatePosts] = useState<RoommatePost[]>([]);
 
   const [isPostingRoommate, setIsPostingRoommate] = useState(false);
   const [newRmDept, setNewRmDept] = useState('Accounting');
@@ -593,7 +558,7 @@ export const StudentDashboard: React.FC = () => {
             <div>
               <h3 className="font-extrabold text-base text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <Users className="w-5 h-5 text-indigo-600" />
-                Campora Student Co-Living & Roommate Match
+                Dormiqa Student Co-Living & Roommate Match
               </h3>
               <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                 Split rent expenses with fellow verified students at your campus.
@@ -751,7 +716,7 @@ export const StudentDashboard: React.FC = () => {
                 <div className="flex items-center justify-between pt-2">
                   <span className="text-[10px] text-slate-400">{post.createdAt}</span>
                   <a
-                    href={`https://wa.me/${post.contactPhone.replace(/[^0-9]/g, '')}?text=Hi%20${encodeURIComponent(post.studentName)},%20I%20saw%20your%20roommate%20post%20on%20Campora!`}
+                    href={`https://wa.me/${post.contactPhone.replace(/[^0-9]/g, '')}?text=Hi%20${encodeURIComponent(post.studentName)},%20I%20saw%20your%20roommate%20post%20on%20Dormiqa!`}
                     target="_blank"
                     rel="noreferrer"
                     className="px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition-colors flex items-center gap-1"
@@ -903,7 +868,7 @@ export const StudentDashboard: React.FC = () => {
 
               <div>
                 <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-black uppercase">
-                  Campora Verified Pass
+                  Dormiqa Verified Pass
                 </span>
                 <h3 className="font-extrabold text-base text-slate-900 dark:text-slate-100 mt-2">
                   Physical Viewing Pass

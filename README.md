@@ -1,20 +1,20 @@
-# Campora - Africa's Verified Student Housing Ecosystem
+# Dormiqa - Africa's Verified Student Housing Ecosystem
 
 <p align="center">
-  <img src="/public/logo.svg" alt="Campora Logo" width="220" />
+  <img src="/public/logo.svg" alt="Dormiqa Logo" width="220" />
 </p>
 
-**Campora** is a tech-enabled student housing discovery platform built to eliminate accommodation scams, high-risk middleman fees, and housing anxiety for higher education students across Nigerian and African university campuses.
+**Dormiqa** is a tech-enabled student housing discovery platform built to eliminate accommodation scams, high-risk middleman fees, and housing anxiety for higher education students across Nigerian and African university campuses.
 
 ---
 
 ## 🌟 Overview
 
-Every year, millions of university students navigate off-campus housing markets dominated by unverified middlemen and fraudulent advance fee demands. **Campora** replaces informal, high-risk property searches with a clean, verified, tech-driven marketplace that connects students directly with identity-verified property agents and landlords.
+Every year, millions of university students navigate off-campus housing markets dominated by unverified middlemen and fraudulent advance fee demands. **Dormiqa** replaces informal, high-risk property searches with a clean, verified, tech-driven marketplace that connects students directly with identity-verified property agents and landlords.
 
 ### Key Pillars
 - **Strict Identity Verification**: Verified Agent badges issued after government photo ID (NIN, Driver’s License, International Passport) and property management authorization checks.
-- **Direct Landlord Payments**: Students inspect properties physically and pay rent directly to verified agents or landlords. Campora never holds or processes rent payments.
+- **Direct Landlord Payments**: Students inspect properties physically and pay rent directly to verified agents or landlords. Dormiqa never holds or processes rent payments.
 - **Campus-Centric Search**: Search and filter off-campus hostels, self-contain apartments, and lodges by exact distance to university gates, pricing, and essential amenities (solar inverter, treated water, security gates, Wi-Fi).
 
 ---
@@ -35,7 +35,7 @@ Every year, millions of university students navigate off-campus housing markets 
 ### 📜 Comprehensive Legal & Safety Knowledge Base (Info Hub)
 - **Legal & Policies**: Master Terms & Conditions, Privacy Policy, Cookie Policy, Acceptable Use Policy, Agent Terms, Student Conduct, and Platform Disclaimer.
 - **Trust & Safety**: Community Guidelines, Agent Verification Policy, Listing Quality Standards, Review Integrity Policy, Anti-Fraud Policy, and Report Abuse workflow.
-- **Support & Company**: Help Centre walkthroughs, FAQs, Direct Contact Channels (`support@campora.ng`), Bug Reporting, and Corporate Governance.
+- **Support & Company**: Help Centre walkthroughs, FAQs, Direct Contact Channels (`support@dormiqa.ng`), Bug Reporting, and Corporate Governance.
 
 ---
 
@@ -56,7 +56,7 @@ Every year, millions of university students navigate off-campus housing markets 
 ```
 ├── public/
 │   ├── favicon.svg              # Brand map pin + house roof favicon
-│   └── logo.svg                 # Full Campora logo with typography
+│   └── logo.svg                 # Full Dormiqa logo with typography
 ├── src/
 │   ├── components/
 │   │   ├── Header.tsx           # Navigation header with university selector & role toggles
@@ -73,7 +73,7 @@ Every year, millions of university students navigate off-campus housing markets 
 │   │       ├── legalDocs.ts     # Master Terms, Privacy, Cookies, Disclaimers
 │   │       ├── safetyDocs.ts    # Agent Verification, Anti-Fraud, Review Integrity
 │   │       ├── supportDocs.ts   # Help Centre, FAQs, Contact Us, Report Bug
-│   │       ├── companyDocs.ts   # About Campora, Mission, Vision, Careers, Press
+│   │       ├── companyDocs.ts   # About Dormiqa, Mission, Vision, Careers, Press
 │   │       └── index.ts         # Consolidated export & category metadata
 │   ├── context/
 │   │   └── AuthContext.tsx      # User authentication, university state, and view routing
@@ -122,10 +122,10 @@ npm start
 
 ## 🛡️ Anti-Fraud & Safety Mandate
 
-> **Important Notice**: Campora NEVER charges students for searching or requesting physical property inspections. Rent payments are strictly made directly to verified property owners or agents after physical inspection. Any demand for off-platform upfront payment before viewing should be immediately reported to `abuse@campora.ng`.
+> **Important Notice**: Dormiqa NEVER charges students for searching or requesting physical property inspections. Rent payments are strictly made directly to verified property owners or agents after physical inspection. Any demand for off-platform upfront payment before viewing should be immediately reported to `abuse@dormiqa.ng`.
 
 ---
 
 ## 📄 License & Copyright
 
-© 2026 **Campora Africa Inc.** All rights reserved.
+© 2026 **Dormiqa Africa Inc.** All rights reserved.
