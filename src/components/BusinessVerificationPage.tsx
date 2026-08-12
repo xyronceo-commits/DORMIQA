@@ -173,7 +173,7 @@ export const BusinessVerificationPage: React.FC = () => {
               </p>
             </div>
 
-            <span className="px-3 py-1 rounded-full text-xs font-black bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0">
+            <span className="px-3 py-1 rounded-md text-xs font-black bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0">
               Agent Gold Trust Badge
             </span>
           </div>

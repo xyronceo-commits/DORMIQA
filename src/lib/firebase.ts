@@ -148,7 +148,7 @@ export async function loginWithGoogle(preferredRole: UserRole = 'student'): Prom
       await setDoc(userRef, {
         id: user.uid,
         email: user.email || '',
-        name: user.displayName || 'Dormiqa User',
+        name: user.displayName || (user.email ? user.email.split('@')[0].charAt(0).toUpperCase() + user.email.split('@')[0].slice(1) : 'User'),
         role: preferredRole,
         avatar: user.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
         createdAt: new Date().toISOString(),

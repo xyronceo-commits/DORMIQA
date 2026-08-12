@@ -66,12 +66,12 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect }) =
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 pointer-events-none">
           <div className="flex items-center gap-1.5 pointer-events-auto">
             {listing.isAgentVerified && (
-              <span className="px-2.5 py-1 rounded-full bg-emerald-600 text-white font-medium text-[11px] flex items-center gap-1 shadow-xs">
+              <span className="px-2.5 py-1 rounded-md bg-emerald-600 text-white font-medium text-[11px] flex items-center gap-1 shadow-xs">
                 <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
                 Verified
               </span>
             )}
-            <span className="px-2.5 py-1 rounded-full bg-slate-900/80 text-white font-medium text-[11px]">
+            <span className="px-2.5 py-1 rounded-md bg-slate-900/80 text-white font-medium text-[11px]">
               {typeLabels[listing.type] || listing.type}
             </span>
           </div>
@@ -86,7 +86,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect }) =
               }
               toggleSaveListing(listing.id);
             }}
-            className={`p-2 rounded-full transition-colors pointer-events-auto ${
+            className={`p-2 rounded-xl transition-colors pointer-events-auto ${
               saved
                 ? 'bg-rose-500 text-white'
                 : 'bg-black/50 hover:bg-black/70 text-white'
@@ -102,13 +102,13 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, onSelect }) =
           <>
             <button
               onClick={prevImage}
-              className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/40 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-xl bg-black/40 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={nextImage}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/40 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-xl bg-black/40 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

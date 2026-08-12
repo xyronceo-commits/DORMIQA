@@ -35,7 +35,7 @@ export const OnboardingRoleSelect: React.FC = () => {
       <div className="text-center max-w-2xl mx-auto space-y-4">
         <button
           onClick={() => setActiveView('home')}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back to Landing Page
         </button>
@@ -86,7 +86,7 @@ export const OnboardingRoleSelect: React.FC = () => {
             </div>
 
             <div>
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-[10px] font-black uppercase">
+              <span className="px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-[10px] font-black uppercase">
                 Student Portal
               </span>
               <h3 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 mt-2">
@@ -139,7 +139,7 @@ export const OnboardingRoleSelect: React.FC = () => {
             </div>
 
             <div>
-              <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 text-[10px] font-black uppercase">
+              <span className="px-2.5 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 text-[10px] font-black uppercase">
                 Hostel Owner / Agent
               </span>
               <h3 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 mt-2">

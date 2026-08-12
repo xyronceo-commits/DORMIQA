@@ -148,7 +148,7 @@ export const UserProfilePage: React.FC = () => {
     e.preventDefault();
     setAuthLoading(true);
     try {
-      await signUpEmailFirebase(authEmail, authPassword, authName || 'Dormiqa User', authRole, {
+      await signUpEmailFirebase(authEmail, authPassword, authName || (authEmail ? authEmail.split('@')[0].charAt(0).toUpperCase() + authEmail.split('@')[0].slice(1) : 'User'), authRole, {
         isVerifiedAgent: authRole === 'agent'
       });
       addToast('Account Registered', 'Your new account was created successfully.');
@@ -230,11 +230,11 @@ export const UserProfilePage: React.FC = () => {
                 <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white truncate">
                   {user?.name || 'Guest User'}
                 </h1>
-                <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-xs">
+                <span className="px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-xs">
                   {user?.role || role}
                 </span>
                 {user?.isVerifiedAgent && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                     <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
                     Gold Verified Agent
                   </span>

@@ -157,7 +157,7 @@ export const AgentPhotoUploader: React.FC<AgentPhotoUploaderProps> = ({
             />
             {/* Overlay Guide Ring */}
             <div className="absolute inset-0 border-2 border-dashed border-emerald-400/60 rounded-full m-8 pointer-events-none flex items-center justify-center">
-              <span className="text-[10px] text-emerald-300 bg-slate-950/80 px-2 py-0.5 rounded-full font-bold">
+              <span className="text-[10px] text-emerald-300 bg-slate-950/80 px-2 py-0.5 rounded-md font-bold">
                 Position Face Here
               </span>
             </div>

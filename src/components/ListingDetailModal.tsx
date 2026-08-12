@@ -135,14 +135,14 @@ export const ListingDetailModal: React.FC = () => {
           <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 backdrop-blur sticky top-0 z-20">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-bold uppercase tracking-wider">
+                <span className="px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-bold uppercase tracking-wider">
                   {selectedListing.accommodationTypeName || selectedListing.type.replace('_', ' ')}
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold">
+                <span className="px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold">
                   Property Type: {selectedListing.type.replace('_', ' ')}
                 </span>
                 {selectedListing.isAgentVerified && (
-                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1">
+                  <span className="px-2.5 py-0.5 rounded-md bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1">
                     <ShieldCheck className="w-3.5 h-3.5" />
                     Verified Agent
                   </span>
@@ -195,7 +195,7 @@ export const ListingDetailModal: React.FC = () => {
                   <div>
                     <h4 className="text-xs sm:text-sm font-extrabold text-white flex items-center gap-2">
                       <span>360° Walkthrough Video Tour Available</span>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-[10px] font-black uppercase text-white">Live Inspection</span>
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-500 text-[10px] font-black uppercase text-white">Live Inspection</span>
                     </h4>
                     <p className="text-[11px] text-slate-300 mt-0.5">
                       Explore the room, facilities, walk-around and surroundings before booking.
@@ -261,7 +261,7 @@ export const ListingDetailModal: React.FC = () => {
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                   <span>Photo Gallery</span>
-                  <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold">
+                  <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold">
                     {selectedListing.images.length} Verified Photos
                   </span>
                 </h3>
@@ -307,7 +307,7 @@ export const ListingDetailModal: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Rent Price</span>
                       {selectedListing.salesInformation?.saleType && (
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase border border-emerald-500/30">
+                        <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase border border-emerald-500/30">
                           {selectedListing.salesInformation.saleType.replace('_', ' ')}
                         </span>
                       )}

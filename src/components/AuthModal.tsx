@@ -202,7 +202,7 @@ export const AuthModal: React.FC = () => {
         const chosenUni = INITIAL_UNIVERSITIES.find(u => u.id === universityId) || INITIAL_UNIVERSITIES[0];
         const updates: Partial<UserType> = {
           email: email.trim() || user?.email || '',
-          name: name.trim() || user?.name || 'Dormiqa User',
+          name: name.trim() || user?.name || (email ? email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1) : 'User'),
           role: googleRole,
           universityId: chosenUni.id,
           universityName: chosenUni.name,
@@ -425,7 +425,7 @@ export const AuthModal: React.FC = () => {
                       <p className="text-xs font-bold text-slate-900 dark:text-slate-100">{user?.email || email}</p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/60 px-2.5 py-1 rounded-full flex items-center gap-1 shrink-0">
+                  <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/60 px-2.5 py-1 rounded-md flex items-center gap-1 shrink-0">
                     <CheckCircle2 className="w-3.5 h-3.5" /> Verified
                   </span>
                 </div>
@@ -811,7 +811,7 @@ export const AuthModal: React.FC = () => {
                       <span className="text-xs font-extrabold text-slate-800 dark:text-slate-200">
                         Sign In Account Type:
                       </span>
-                      <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${loginRole === 'agent' ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'}`}>
+                      <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${loginRole === 'agent' ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'}`}>
                         {loginRole === 'agent' ? 'Agent / Landlord' : 'Student Account'}
                       </span>
                     </div>

@@ -115,7 +115,7 @@ CREATE POLICY "Agents can manage own listings" ON listings FOR ALL USING (auth.u
       
       {/* Header Banner */}
       <div className="p-8 rounded-3xl bg-slate-900 text-white shadow-xl space-y-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold">
           <FileText className="w-4 h-4 text-amber-400" />
           Technical Architecture & Database Specs
         </div>

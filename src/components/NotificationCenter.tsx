@@ -93,7 +93,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose,
             <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
               Notification Center
               {unreadCount > 0 && (
-                <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold">
+                <span className="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-bold">
                   {unreadCount} unread
                 </span>
               )}

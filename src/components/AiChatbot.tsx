@@ -165,7 +165,7 @@ const FormattedMessage: React.FC<{ text: string }> = ({ text }) => {
             {currentList.items.map((item, iIdx) => (
               <li key={iIdx} className="flex items-start gap-2 text-xs leading-relaxed">
                 {isNum ? (
-                  <span className="w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="w-4 h-4 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                     {iIdx + 1}
                   </span>
                 ) : (
@@ -446,7 +446,7 @@ export const AiChatbot: React.FC = () => {
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-[70] p-4 rounded-full bg-slate-900 dark:bg-emerald-600 text-white shadow-2xl hover:scale-105 transition-transform flex items-center gap-2 group border border-slate-700/50"
+          className="fixed bottom-6 right-6 z-[70] p-4 rounded-2xl bg-slate-900 dark:bg-emerald-600 text-white shadow-2xl hover:scale-105 transition-transform flex items-center gap-2 group border border-slate-700/50"
           title="Dormiqa AI Assistant"
         >
           <Sparkles className="w-5 h-5 text-emerald-400 group-hover:rotate-12 transition-transform" />
@@ -472,7 +472,7 @@ export const AiChatbot: React.FC = () => {
                 <div>
                   <h4 className="font-bold text-sm flex items-center gap-1.5">
                     Dormiqa Assistant
-                    <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-semibold border border-emerald-500/30">
+                    <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[10px] font-semibold border border-emerald-500/30">
                       Smart AI
                     </span>
                   </h4>
@@ -546,7 +546,7 @@ export const AiChatbot: React.FC = () => {
                 <button
                   key={idx}
                   onClick={() => handleSend(qp)}
-                  className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 text-[11px] font-medium text-slate-600 dark:text-slate-300 whitespace-nowrap shrink-0 transition-colors"
+                  className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 text-[11px] font-medium text-slate-600 dark:text-slate-300 whitespace-nowrap shrink-0 transition-colors"
                 >
                   {qp}
                 </button>

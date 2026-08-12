@@ -190,31 +190,79 @@ export const SearchFilters: React.FC = () => {
     { key: 'furnished', label: 'Furnished' },
   ];
 
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-8">
-      {/* Search Header */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+      
+      {/* LEVEL 2: PROPERTY DISCOVERY & SEARCH AREA */}
       <div className="space-y-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-            Find Student Housing
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            {selectedUniversity ? `Showing accommodations near ${selectedUniversity.name}` : 'Explore verified accommodations across all Nigerian universities'}
-          </p>
+        
+        {/* Row 1: Institution Category Treatment */}
+        <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800/80 pb-3">
+          <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto no-scrollbar py-1 text-xs font-semibold">
+            {[
+              { id: 'all', label: 'All Institutions' },
+              { id: 'Federal', label: 'Federal Uni' },
+              { id: 'State', label: 'State Uni' },
+              { id: 'Private', label: 'Private Uni' },
+              { id: 'Polytechnic', label: 'Polytechnics' },
+            ].map(cat => {
+              const isActive = cat.id === 'all' 
+                ? (selectedOwnership === 'all' && selectedInstType === 'all')
+                : (cat.id === 'Polytechnic' ? selectedInstType === 'Polytechnic' : selectedOwnership === cat.id);
+              
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => {
+                    if (cat.id === 'all') {
+                      setSelectedOwnership('all');
+                      setSelectedInstType('all');
+                    } else if (cat.id === 'Polytechnic') {
+                      setSelectedOwnership('all');
+                      setSelectedInstType('Polytechnic');
+                    } else {
+                      setSelectedOwnership(cat.id);
+                      setSelectedInstType('all');
+                    }
+                  }}
+                  className={`px-3 py-1.5 rounded-lg shrink-0 transition-all ${
+                    isActive
+                      ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-200 dark:border-emerald-800'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-900'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {selectedUniversity && (
+            <button
+              onClick={() => setSelectedUniversity(null)}
+              className="hidden md:flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium shrink-0"
+            >
+              <span>{selectedUniversity.shortName}</span>
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
-        {/* Primary Search Controls Bar */}
-        <div className="p-2 sm:p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+        {/* Row 2: Primary Property Search Bar & Grouped Secondary Controls */}
+        <div className="bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+            
             {/* Search Input */}
-            <div className="relative flex-1">
+            <div className="relative md:col-span-5">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by hostel name, area, or street..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                placeholder="Search hostel name, campus gate, or street..."
+                className="w-full pl-10 pr-8 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               />
               {searchQuery && (
                 <button
@@ -226,38 +274,71 @@ export const SearchFilters: React.FC = () => {
               )}
             </div>
 
-            {/* Filter Drawer Toggle Button */}
-            <button
-              onClick={() => setIsFilterDrawerOpen(true)}
-              className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium text-sm flex items-center justify-center gap-2 transition-colors shrink-0"
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-              <span>Filters</span>
-              {activeFilterCount > 0 && (
-                <span className="w-5 h-5 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center">
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
+            {/* Walking Distance Selector */}
+            <div className="md:col-span-2">
+              <select
+                value={maxDistanceMinutes}
+                onChange={(e) => setMaxDistanceMinutes(e.target.value ? Number(e.target.value) : '')}
+                className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 text-slate-800 dark:text-slate-200 text-xs font-medium focus:outline-none"
+              >
+                <option value="">Walking Distance: Any</option>
+                <option value="5">≤ 5 mins walk</option>
+                <option value="10">≤ 10 mins walk</option>
+                <option value="15">≤ 15 mins walk</option>
+                <option value="20">≤ 20 mins walk</option>
+              </select>
+            </div>
 
-            {/* AI Assistant Search Toggle */}
-            <button
-              onClick={() => setShowAiSearch(!showAiSearch)}
-              className={`px-4 py-2.5 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors shrink-0 ${
-                showAiSearch
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-              }`}
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>AI Search</span>
-            </button>
+            {/* Maximum Budget Selector */}
+            <div className="md:col-span-2">
+              <select
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value ? Number(e.target.value) : '')}
+                className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 text-slate-800 dark:text-slate-200 text-xs font-medium focus:outline-none"
+              >
+                <option value="">Budget: Any Price</option>
+                <option value="200000">≤ ₦200,000 / yr</option>
+                <option value="300000">≤ ₦300,000 / yr</option>
+                <option value="500000">≤ ₦500,000 / yr</option>
+                <option value="800000">≤ ₦800,000 / yr</option>
+                <option value="1200000">≤ ₦1,200,000 / yr</option>
+              </select>
+            </div>
+
+            {/* Filters & AI Search Buttons */}
+            <div className="md:col-span-3 flex items-center gap-2">
+              <button
+                onClick={() => setIsFilterDrawerOpen(true)}
+                className="flex-1 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-xs flex items-center justify-center gap-2 transition-colors"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                <span>Filters</span>
+                {activeFilterCount > 0 && (
+                  <span className="w-4 h-4 rounded bg-emerald-600 text-white text-[9px] font-black flex items-center justify-center">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={() => setShowAiSearch(!showAiSearch)}
+                className={`py-2.5 px-3 rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors ${
+                  showAiSearch
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>AI Prompt</span>
+              </button>
+            </div>
+
           </div>
 
-          {/* Quick Room Type Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1">
+          {/* Quick Room Type Filter Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1 text-xs">
             {[
-              { id: 'all', label: 'All Types' },
+              { id: 'all', label: 'All Room Types' },
               { id: 'self_contain', label: 'Self-Contain' },
               { id: 'single_room', label: 'Single Room' },
               { id: 'hostel', label: 'Private Hostel' },
@@ -267,10 +348,10 @@ export const SearchFilters: React.FC = () => {
               <button
                 key={pill.id}
                 onClick={() => setSelectedType(pill.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-colors ${
+                className={`px-3 py-1 rounded-lg text-xs font-semibold shrink-0 transition-colors ${
                   selectedType === pill.id
                     ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
                 {pill.label}
@@ -278,7 +359,7 @@ export const SearchFilters: React.FC = () => {
             ))}
           </div>
 
-          {/* Optional Natural Language AI Search Box */}
+          {/* Optional Natural Language AI Prompt Box */}
           <AnimatePresence>
             {showAiSearch && (
               <motion.form
@@ -286,20 +367,20 @@ export const SearchFilters: React.FC = () => {
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 onSubmit={handleAiSearch}
-                className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2"
+                className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2"
               >
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={aiPrompt}
                     onChange={(e) => setAiPrompt(e.target.value)}
-                    placeholder="Describe what you need e.g. Self-contain under ₦300k with solar inverter..."
-                    className="flex-1 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs focus:outline-none"
+                    placeholder="Describe your ideal stay e.g. Self-contain under ₦350k with 24/7 solar power..."
+                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs focus:outline-none"
                   />
                   <button
                     type="submit"
                     disabled={aiLoading}
-                    className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-semibold text-xs transition-colors shrink-0 flex items-center gap-1.5"
+                    className="px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs transition-colors shrink-0 flex items-center gap-1.5"
                   >
                     {aiLoading ? (
                       <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -319,67 +400,83 @@ export const SearchFilters: React.FC = () => {
               </motion.form>
             )}
           </AnimatePresence>
+
         </div>
+
+        {/* Row 3: Results Toolbar (Separated & Lighter) */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">
+          
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              {listings.length} {listings.length === 1 ? 'lodging' : 'lodgings'} {selectedUniversity ? `near ${selectedUniversity.shortName}` : 'available'}
+            </span>
+            {activeFilterCount > 0 && (
+              <button
+                onClick={resetFilters}
+                className="text-xs text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 font-semibold underline ml-2"
+              >
+                Clear Filters ({activeFilterCount})
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 self-end sm:self-auto">
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-slate-400 mr-1 hidden sm:inline">Sort:</span>
+              <select
+                value={sortBy}
+                onChange={(e: any) => setSortBy(e.target.value)}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none"
+              >
+                <option value="newest">Newest First</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+                <option value="distance">Nearest to Campus Gate</option>
+                <option value="rating">Top Rated</option>
+              </select>
+            </div>
+          </div>
+
+        </div>
+
       </div>
 
-      {/* Results Controls Bar */}
-      <div className="flex items-center justify-between gap-4 pt-2">
-        <div className="flex items-center gap-2">
-          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
-            Accommodations
-          </h2>
-          <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold">
-            {listings.length}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {activeFilterCount > 0 && (
-            <button
-              onClick={resetFilters}
-              className="text-xs text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 underline"
-            >
-              Reset filters
-            </button>
-          )}
-
-          <select
-            value={sortBy}
-            onChange={(e: any) => setSortBy(e.target.value)}
-            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-medium text-slate-700 dark:text-slate-300 focus:outline-none"
-          >
-            <option value="newest">Newest First</option>
-            <option value="price_asc">Price: Low to High</option>
-            <option value="price_desc">Price: High to Low</option>
-            <option value="distance">Nearest to Campus</option>
-            <option value="rating">Top Rated</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Accommodations Grid */}
+      {/* LEVEL 3: PROPERTY RESULTS / HERO LISTINGS */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
           {[1, 2, 3, 4, 5, 6].map(i => (
             <div key={i} className="h-80 rounded-2xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
           ))}
         </div>
       ) : listings.length === 0 ? (
-        <div className="py-16 text-center space-y-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
-          <Search className="w-8 h-8 text-slate-400 mx-auto" />
-          <h3 className="font-semibold text-slate-800 dark:text-slate-200 text-base">No Accommodations Found</h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            Try loosening your price filters or searching for a different room type.
-          </p>
-          <button
-            onClick={resetFilters}
-            className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-semibold text-xs"
-          >
-            Reset Filters
-          </button>
+        <div className="py-16 px-4 text-center space-y-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 my-4">
+          <Search className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto" />
+          <div className="space-y-1">
+            <h3 className="font-bold text-slate-800 dark:text-slate-200 text-base">No stays match these filters</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+              Try widening your budget, selecting another university campus, or resetting your filter preferences.
+            </p>
+          </div>
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <button
+              onClick={resetFilters}
+              className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs hover:opacity-90 transition-opacity"
+            >
+              Reset Filters
+            </button>
+            <button
+              onClick={() => {
+                setMaxPrice('');
+                setMaxDistanceMinutes('');
+              }}
+              className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              Expand Search Range
+            </button>
+          </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
           {listings.map(listing => (
             <ListingCard key={listing.id} listing={listing} />
           ))}

@@ -58,36 +58,12 @@ export const Header: React.FC = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isVerticalNavOpen, setIsVerticalNavOpen] = useState(false);
 
-  // If user is on landing page or onboarding page (or not signed in), show header consisting ONLY of logo and discreet secure access button
-  if (!user || activeView === 'home' || activeView === 'role_select' || activeView === 'onboarding') {
-    return (
-      <header className="sticky top-0 z-50 w-full bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <button
-            onClick={() => setActiveView('home')}
-            className="focus:outline-none group text-left"
-          >
-            <DormiqaLogo size="md" />
-          </button>
-          <button
-            onClick={() => setIsAdminModalOpen(true)}
-            title="Secure access"
-            aria-label="Secure access"
-            className="p-2 rounded-xl text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors"
-          >
-            <ShieldCheck className="w-4 h-4 opacity-70 hover:opacity-100 transition-opacity" />
-          </button>
-        </div>
-      </header>
-    );
-  }
-
   return (
-    <header className="sticky top-0 z-50 w-full bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-50 w-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 transition-colors">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3 sm:gap-6">
         
-        {/* Left Brand Logo & Uni Selector */}
-        <div className="flex items-center gap-4">
+        {/* Left Brand Logo & Location/University Selector */}
+        <div className="flex items-center gap-3 lg:gap-6 shrink-0">
           <button
             onClick={() => setActiveView('home')}
             className="focus:outline-none group text-left"
@@ -95,17 +71,17 @@ export const Header: React.FC = () => {
             <DormiqaLogo size="md" />
           </button>
 
-          {/* University Picker Dropdown */}
-          <div className="relative hidden md:block">
+          {/* Location / University Picker Dropdown */}
+          <div className="relative">
             <button
               onClick={() => setIsUniDropdownOpen(!isUniDropdownOpen)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800 text-xs font-medium text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-800 transition-colors"
+              className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors"
             >
-              <GraduationCap className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span className="max-w-[140px] truncate">
-                {selectedUniversity ? selectedUniversity.shortName : 'All Universities'}
+              <GraduationCap className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span className="max-w-[110px] sm:max-w-[150px] truncate">
+                {selectedUniversity ? selectedUniversity.shortName : 'All Campuses'}
               </span>
-              <ChevronDown className="w-3.5 h-3.5 text-neutral-400" />
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             </button>
 
             <AnimatePresence>
@@ -119,7 +95,7 @@ export const Header: React.FC = () => {
                   <div className="px-3 pb-2 border-b border-slate-100 dark:border-slate-800 space-y-2">
                     <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                       <span>Nigeria Tertiary System</span>
-                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">{INITIAL_UNIVERSITIES.length} Campus Hubs</span>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">{INITIAL_UNIVERSITIES.length} Campuses</span>
                     </div>
 
                     {/* Search Bar */}
@@ -211,230 +187,114 @@ export const Header: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Actions: Vertical Nav, Notifications, Dark Mode, Profile */}
-        <div className="flex items-center gap-2">
-
-          {/* Vertical Navigation Menu Button (Top Right) */}
-          <div className="relative">
-            <button
-              onClick={() => setIsVerticalNavOpen(!isVerticalNavOpen)}
-              className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors flex items-center justify-center"
-              title="Navigation Menu"
-              aria-label="Navigation Menu"
-            >
-              {isVerticalNavOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-
-            {/* Vertical Navigation Panel (Anchored Right) */}
-            <AnimatePresence>
-              {isVerticalNavOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-2 z-50 overflow-hidden"
-                >
-                  <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Navigation</span>
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[9px] font-bold">
-                      Dormiqa
-                    </span>
-                  </div>
-
-                  {/* Vertical Stacked Navigation Items */}
-                  <div className="flex flex-col gap-1 py-1 text-xs font-bold">
-                    <button
-                      onClick={() => {
-                        setActiveView('home');
-                        setIsVerticalNavOpen(false);
-                      }}
-                      className={`w-full px-3 py-2.5 rounded-xl transition-all flex items-center justify-between text-left ${
-                        activeView === 'home'
-                          ? 'bg-emerald-600 text-white font-black'
-                          : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Home className="w-4 h-4" />
-                        <span>Home Page</span>
-                      </div>
-                      {activeView === 'home' && <Check className="w-4 h-4 text-white" />}
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setActiveView('search');
-                        setIsVerticalNavOpen(false);
-                      }}
-                      className={`w-full px-3 py-2.5 rounded-xl transition-all flex items-center justify-between text-left ${
-                        activeView === 'search'
-                          ? 'bg-emerald-600 text-white font-black'
-                          : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Search className="w-4 h-4" />
-                        <span>Explore Hostels</span>
-                      </div>
-                      {activeView === 'search' && <Check className="w-4 h-4 text-white" />}
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setActiveView('saved');
-                        setIsVerticalNavOpen(false);
-                      }}
-                      className={`w-full px-3 py-2.5 rounded-xl transition-all flex items-center justify-between text-left ${
-                        activeView === 'saved'
-                          ? 'bg-emerald-600 text-white font-black'
-                          : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Bookmark className="w-4 h-4" />
-                        <span>Saved / Bookmarks</span>
-                      </div>
-                      {savedListingIds.length > 0 && (
-                        <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] rounded-full font-bold">
-                          {savedListingIds.length}
-                        </span>
-                      )}
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setActiveView('profile');
-                        setIsVerticalNavOpen(false);
-                      }}
-                      className={`w-full px-3 py-2.5 rounded-xl transition-all flex items-center justify-between text-left ${
-                        activeView === 'profile'
-                          ? 'bg-emerald-600 text-white font-black'
-                          : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <UserIcon className="w-4 h-4" />
-                        <span>My Profile</span>
-                      </div>
-                      {activeView === 'profile' && <Check className="w-4 h-4 text-white" />}
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setActiveView('info_hub');
-                        setIsVerticalNavOpen(false);
-                      }}
-                      className={`w-full px-3 py-2.5 rounded-xl transition-all flex items-center justify-between text-left ${
-                        activeView === 'info_hub'
-                          ? 'bg-emerald-600 text-white font-black'
-                          : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <FileText className="w-4 h-4 text-emerald-500" />
-                        <span>Legal & Knowledge Base</span>
-                      </div>
-                      {activeView === 'info_hub' && <Check className="w-4 h-4 text-white" />}
-                    </button>
-
-                    {role === 'agent' && (
-                      <>
-                        <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
-                        <span className="px-3 pt-1 text-[9px] font-black uppercase text-emerald-600 dark:text-emerald-400">
-                          Agent Tools
-                        </span>
-                        <button
-                          onClick={() => {
-                            setActiveView('agent_dashboard');
-                            setAgentActiveTab('add_wizard');
-                            setIsVerticalNavOpen(false);
-                          }}
-                          className="w-full px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-2.5 text-left"
-                        >
-                          <PlusCircle className="w-4 h-4 text-emerald-600" />
-                          <span>Add New Hostels</span>
-                        </button>
-                      </>
-                    )}
-
-                    {/* Theme Mode Control inside Vertical Nav */}
-                    <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
-                    <div className="px-3 py-2 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                          {effectiveTheme === 'dark' ? <Moon className="w-3.5 h-3.5 text-emerald-400" /> : <Sun className="w-3.5 h-3.5 text-amber-500" />}
-                          Theme Mode
-                        </span>
-                        <span className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400">
-                          {theme === 'system' ? `Device (${effectiveTheme})` : `${theme} mode`}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
-                        <button
-                          onClick={() => setTheme('light')}
-                          className={`py-1.5 px-2 rounded-lg text-[10px] font-extrabold transition-all flex items-center justify-center gap-1 ${
-                            theme === 'light'
-                              ? 'bg-white text-slate-900 shadow-sm'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                          }`}
-                        >
-                          <Sun className="w-3 h-3 text-amber-500" /> Light
-                        </button>
-                        <button
-                          onClick={() => setTheme('dark')}
-                          className={`py-1.5 px-2 rounded-lg text-[10px] font-extrabold transition-all flex items-center justify-center gap-1 ${
-                            theme === 'dark'
-                              ? 'bg-slate-950 text-white shadow-sm'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                          }`}
-                        >
-                          <Moon className="w-3 h-3 text-emerald-400" /> Dark
-                        </button>
-                        <button
-                          onClick={() => setTheme('system')}
-                          className={`py-1.5 px-2 rounded-lg text-[10px] font-extrabold transition-all flex items-center justify-center gap-1 ${
-                            theme === 'system'
-                              ? 'bg-emerald-600 text-white shadow-sm'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                          }`}
-                        >
-                          <Laptop className="w-3 h-3" /> Device
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Quick Theme Toggle Button in Header Bar */}
+        {/* Center Primary Navigation Links (Desktop) */}
+        <nav className="hidden lg:flex items-center gap-6">
           <button
-            onClick={toggleTheme}
-            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors flex items-center justify-center relative group"
-            title={theme === 'system' ? `Device Settings Active (${effectiveTheme})` : `Current Theme: ${theme}. Click to toggle.`}
-            aria-label="Toggle Light and Dark Mode"
+            onClick={() => setActiveView('search')}
+            className={`text-sm font-semibold transition-colors flex items-center gap-1.5 ${
+              activeView === 'home' || activeView === 'search'
+                ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+            }`}
           >
-            {effectiveTheme === 'dark' ? (
-              <Sun className="w-5 h-5 text-amber-400 group-hover:rotate-45 transition-transform" />
-            ) : (
-              <Moon className="w-5 h-5 text-slate-700 dark:text-slate-200 group-hover:-rotate-12 transition-transform" />
-            )}
-            {theme === 'system' && (
-              <span className="absolute bottom-1 right-1 w-2 h-2 bg-emerald-500 rounded-full ring-2 ring-white dark:ring-slate-900" title="Synced with Device Settings" />
+            <span>Discover</span>
+          </button>
+
+          <button
+            onClick={() => {
+              if (!user) {
+                setAuthModalTab('student_signup');
+                setAuthModalOpen(true);
+              } else {
+                setActiveView('saved');
+              }
+            }}
+            className={`text-sm font-semibold transition-colors flex items-center gap-1.5 ${
+              activeView === 'saved'
+                ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <span>Saved</span>
+            {savedListingIds.length > 0 && (
+              <span className="px-1.5 py-0.2 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] rounded-md font-extrabold">
+                {savedListingIds.length}
+              </span>
             )}
           </button>
 
-          {/* Notifications Popover */}
+          <button
+            onClick={() => {
+              if (!user) {
+                setAuthModalTab('student_signup');
+                setAuthModalOpen(true);
+              } else {
+                setChatModalOpen(true);
+              }
+            }}
+            className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5"
+          >
+            <span>Messages</span>
+          </button>
+
+          <button
+            onClick={() => {
+              if (!user) {
+                setAuthModalTab('login');
+                setAuthModalOpen(true);
+              } else {
+                setActiveView(role === 'agent' ? 'agent_dashboard' : 'student_dashboard');
+              }
+            }}
+            className={`text-sm font-semibold transition-colors flex items-center gap-1.5 ${
+              activeView === 'student_dashboard' || activeView === 'agent_dashboard'
+                ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <span>Dashboard</span>
+          </button>
+        </nav>
+
+        {/* Right Actions: AI Search & Chat, Notifications, Account, Menu, Shield */}
+        <div className="flex items-center gap-2 sm:gap-3">
+
+          {/* AI Search & Chat Button */}
+          <button
+            onClick={() => {
+              setActiveView('search');
+            }}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors border border-emerald-200/60 dark:border-emerald-800/60"
+            title="AI Search & Chat"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>AI Search & Chat</span>
+          </button>
+
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-300 transition-colors relative"
+            title="Toggle theme"
+            aria-label="Toggle theme"
+          >
+            {effectiveTheme === 'dark' ? (
+              <Sun className="w-4 h-4 text-amber-400" />
+            ) : (
+              <Moon className="w-4 h-4 text-slate-700 dark:text-slate-200" />
+            )}
+          </button>
+
+          {/* Notifications */}
           <div className="relative">
             <button
               onClick={() => setIsNotifOpen(!isNotifOpen)}
-              className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors relative"
+              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-300 transition-colors relative"
               title="Notifications"
             >
-              <Bell className="w-5 h-5" />
+              <Bell className="w-4 h-4" />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 bg-emerald-600 text-white text-[10px] font-black rounded-full flex items-center justify-center">
+                <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-emerald-600 text-white text-[9px] font-black rounded-md flex items-center justify-center">
                   {unreadCount}
                 </span>
               )}
@@ -454,34 +314,22 @@ export const Header: React.FC = () => {
             </AnimatePresence>
           </div>
 
-
-
-          {/* Discreet Secure Access Icon */}
-          <button
-            onClick={() => setIsAdminModalOpen(true)}
-            title="Secure access"
-            aria-label="Secure access"
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
-          >
-            <ShieldCheck className="w-4 h-4 opacity-70 hover:opacity-100 transition-opacity text-slate-500 dark:text-slate-400" />
-          </button>
-
-          {/* User Profile / Login Button */}
+          {/* User Profile / Student Account */}
           {user ? (
             <div className="relative">
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="flex items-center gap-2 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
               >
                 <img
                   src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'}
                   alt={user.name}
-                  className="w-8 h-8 rounded-full object-cover border-2 border-emerald-500"
+                  className="w-7 h-7 rounded-full object-cover border border-emerald-500"
                 />
-                <span className="hidden sm:inline font-bold text-xs text-slate-800 dark:text-slate-200 max-w-[120px] truncate">
+                <span className="hidden xl:inline font-semibold text-xs text-slate-800 dark:text-slate-200 max-w-[100px] truncate">
                   {user.name}
                 </span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:inline" />
               </button>
 
               <AnimatePresence>
@@ -521,7 +369,7 @@ export const Header: React.FC = () => {
                         <Bookmark className="w-4 h-4 text-emerald-600" /> Saved Hostels
                       </div>
                       {savedListingIds.length > 0 && (
-                        <span className="px-1.5 py-0.2 bg-emerald-600 text-white text-[10px] rounded-full font-bold">
+                        <span className="px-1.5 py-0.2 bg-emerald-600 text-white text-[10px] rounded-md font-bold">
                           {savedListingIds.length}
                         </span>
                       )}
@@ -534,25 +382,181 @@ export const Header: React.FC = () => {
                       }}
                       className="w-full px-4 py-2.5 text-left hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2 border-t border-slate-100 dark:border-slate-800 mt-1"
                     >
-                      <LogOut className="w-4 h-4 text-emerald-600" /> Sign Out / Log Out
+                      <LogOut className="w-4 h-4 text-emerald-600" /> Sign Out
                     </button>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  setAuthModalTab('login');
-                  setAuthModalOpen(true);
-                }}
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs transition-colors shadow-sm"
-              >
-                Sign In
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                setAuthModalTab('login');
+                setAuthModalOpen(true);
+              }}
+              className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-xs"
+            >
+              Sign In
+            </button>
           )}
+
+          {/* Discreet Secure Access Shield Icon */}
+          <button
+            onClick={() => setIsAdminModalOpen(true)}
+            title="Secure access"
+            aria-label="Secure access"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+          >
+            <ShieldCheck className="w-4 h-4 opacity-70 hover:opacity-100 transition-opacity text-slate-400 dark:text-slate-500" />
+          </button>
+
+          {/* Menu Button (Mobile / Vertical Nav) */}
+          <div className="relative lg:hidden">
+            <button
+              onClick={() => setIsVerticalNavOpen(!isVerticalNavOpen)}
+              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-200 transition-colors flex items-center justify-center"
+              title="Menu"
+              aria-label="Menu"
+            >
+              {isVerticalNavOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+
+            {/* Vertical Navigation Panel */}
+            <AnimatePresence>
+              {isVerticalNavOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-2 z-50 overflow-hidden"
+                >
+                  <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Navigation</span>
+                    <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[9px] font-bold">
+                      Dormiqa
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-1 py-1 text-xs font-semibold">
+                    <button
+                      onClick={() => {
+                        setActiveView('search');
+                        setIsVerticalNavOpen(false);
+                      }}
+                      className={`w-full px-3 py-2.5 rounded-xl transition-all flex items-center justify-between text-left ${
+                        activeView === 'home' || activeView === 'search'
+                          ? 'bg-emerald-600 text-white font-bold'
+                          : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Search className="w-4 h-4" />
+                        <span>Discover Hostels</span>
+                      </div>
+                      {(activeView === 'home' || activeView === 'search') && <Check className="w-4 h-4 text-white" />}
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (!user) {
+                          setAuthModalTab('student_signup');
+                          setAuthModalOpen(true);
+                        } else {
+                          setActiveView('saved');
+                        }
+                        setIsVerticalNavOpen(false);
+                      }}
+                      className={`w-full px-3 py-2.5 rounded-xl transition-all flex items-center justify-between text-left ${
+                        activeView === 'saved'
+                          ? 'bg-emerald-600 text-white font-bold'
+                          : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Bookmark className="w-4 h-4" />
+                        <span>Saved Hostels</span>
+                      </div>
+                      {savedListingIds.length > 0 && (
+                        <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] rounded-md font-bold">
+                          {savedListingIds.length}
+                        </span>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (!user) {
+                          setAuthModalTab('student_signup');
+                          setAuthModalOpen(true);
+                        } else {
+                          setChatModalOpen(true);
+                        }
+                        setIsVerticalNavOpen(false);
+                      }}
+                      className="w-full px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-2.5 text-left"
+                    >
+                      <MessageSquare className="w-4 h-4 text-emerald-600" />
+                      <span>Messages</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (!user) {
+                          setAuthModalTab('login');
+                          setAuthModalOpen(true);
+                        } else {
+                          setActiveView(role === 'agent' ? 'agent_dashboard' : 'student_dashboard');
+                        }
+                        setIsVerticalNavOpen(false);
+                      }}
+                      className="w-full px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-2.5 text-left"
+                    >
+                      <Home className="w-4 h-4" />
+                      <span>Dashboard</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setActiveView('info_hub');
+                        setIsVerticalNavOpen(false);
+                      }}
+                      className={`w-full px-3 py-2.5 rounded-xl transition-all flex items-center justify-between text-left ${
+                        activeView === 'info_hub'
+                          ? 'bg-emerald-600 text-white font-bold'
+                          : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <FileText className="w-4 h-4 text-emerald-500" />
+                        <span>Knowledge Base & Legal</span>
+                      </div>
+                      {activeView === 'info_hub' && <Check className="w-4 h-4 text-white" />}
+                    </button>
+
+                    {role === 'agent' && (
+                      <>
+                        <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+                        <span className="px-3 pt-1 text-[9px] font-black uppercase text-emerald-600 dark:text-emerald-400">
+                          Agent Tools
+                        </span>
+                        <button
+                          onClick={() => {
+                            setActiveView('agent_dashboard');
+                            setAgentActiveTab('add_wizard');
+                            setIsVerticalNavOpen(false);
+                          }}
+                          className="w-full px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-2.5 text-left"
+                        >
+                          <PlusCircle className="w-4 h-4 text-emerald-600" />
+                          <span>Add New Hostels</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
         </div>
       </div>

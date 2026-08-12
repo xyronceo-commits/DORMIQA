@@ -106,7 +106,7 @@ export const AdminDashboard: React.FC = () => {
               <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                 Dormiqa Admin
               </h1>
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-semibold text-[10px] uppercase tracking-wider">
+              <span className="px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-semibold text-[10px] uppercase tracking-wider">
                 Authorized Session
               </span>
             </div>
@@ -210,7 +210,7 @@ export const AdminDashboard: React.FC = () => {
           <ShieldCheck className="w-4 h-4" />
           <span>Agent Verification</span>
           {pendingAgentsCount > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-white font-black text-[10px]">
+            <span className="px-1.5 py-0.5 rounded-md bg-amber-500 text-white font-black text-[10px]">
               {pendingAgentsCount}
             </span>
           )}
@@ -297,17 +297,17 @@ export const AdminDashboard: React.FC = () => {
                         ({ag.agentName})
                       </span>
                       {ag.status === 'verified' && (
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] flex items-center gap-1">
                           <CheckCircle2 className="w-3 h-3" /> Verified
                         </span>
                       )}
                       {ag.status === 'rejected' && (
-                        <span className="px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-bold text-[10px]">
+                        <span className="px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-bold text-[10px]">
                           Rejected
                         </span>
                       )}
                       {ag.status === 'pending' && (
-                        <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 font-bold text-[10px]">
+                        <span className="px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 font-bold text-[10px]">
                           Pending Review
                         </span>
                       )}

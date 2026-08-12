@@ -455,7 +455,7 @@ export const AgentDashboard: React.FC = () => {
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30 flex items-center gap-1">
+              <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30 flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 Verified Agent Business Portal
               </span>
@@ -647,7 +647,7 @@ export const AgentDashboard: React.FC = () => {
                       </td>
                       <td className="p-4 font-semibold">
                         <div className="flex flex-col gap-1">
-                          <span className={`w-fit px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
+                          <span className={`w-fit px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase ${
                             unitStatusLabel === 'occupied'
                               ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-900'
                               : isRenovating
@@ -858,7 +858,7 @@ export const AgentDashboard: React.FC = () => {
                   </p>
                 </div>
 
-                <span className={`px-3 py-1 rounded-full text-xs font-extrabold flex items-center gap-1 ${
+                <span className={`px-3 py-1 rounded-md text-xs font-extrabold flex items-center gap-1 ${
                   wizardImages.length >= 5
                     ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300'
                     : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300'
@@ -997,7 +997,7 @@ export const AgentDashboard: React.FC = () => {
                   </p>
                 </div>
 
-                <span className={`px-3 py-1 rounded-full text-xs font-extrabold flex items-center gap-1 ${
+                <span className={`px-3 py-1 rounded-md text-xs font-extrabold flex items-center gap-1 ${
                   wizardVideo360Url.trim()
                     ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300'
                     : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300'
@@ -1162,7 +1162,7 @@ export const AgentDashboard: React.FC = () => {
                 Students posting custom budget requests, roommate matches, or specific location criteria.
               </p>
             </div>
-            <span className="px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-extrabold text-xs">
+            <span className="px-3 py-1 rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-extrabold text-xs">
               {specialRequests.length} Active Requests
             </span>
           </div>
@@ -1174,7 +1174,7 @@ export const AgentDashboard: React.FC = () => {
                 className="p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-sm space-y-4 relative overflow-hidden"
               >
                 <div className="flex items-center justify-between">
-                  <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-black text-[10px] uppercase tracking-wider">
+                  <span className="px-2.5 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-black text-[10px] uppercase tracking-wider">
                     {req.requestType}
                   </span>
                   <span className="text-[10px] text-slate-400 font-medium">{req.date}</span>
@@ -1292,7 +1292,7 @@ export const AgentDashboard: React.FC = () => {
                   className="p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-sm space-y-3"
                 >
                   <div className="flex items-center justify-between">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                    <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase ${
                       ins.status === 'confirmed'
                         ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
                         : ins.status === 'pending'

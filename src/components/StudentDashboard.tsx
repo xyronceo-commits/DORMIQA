@@ -175,7 +175,7 @@ export const StudentDashboard: React.FC = () => {
             className="w-16 h-16 rounded-2xl object-cover border-2 border-emerald-400 shadow-md"
           />
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-extrabold border border-emerald-500/30 mb-1.5">
+            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 text-xs font-extrabold border border-emerald-500/30 mb-1.5">
               <GraduationCap className="w-3.5 h-3.5" /> Student Accommodation Portal
             </div>
             <h1 className="text-xl sm:text-2xl font-extrabold">{user?.name || 'Student Inspector'}</h1>
@@ -309,7 +309,7 @@ export const StudentDashboard: React.FC = () => {
                     />
                     <div className="min-w-0 flex-1 space-y-1">
                       <div className="flex items-center justify-between gap-2">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                        <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase ${
                           ins.status === 'confirmed'
                             ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300'
                             : ins.status === 'pending'
@@ -701,7 +701,7 @@ export const StudentDashboard: React.FC = () => {
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 text-xs space-y-1.5">
                   <div className="flex items-center justify-between text-slate-800 dark:text-slate-200 font-bold">
                     <span>Budget: ₦{new Intl.NumberFormat().format(post.budgetPerHead)} / head</span>
-                    <span className="px-2 py-0.5 rounded-full text-[9px] uppercase font-black bg-indigo-100 text-indigo-800">
+                    <span className="px-2 py-0.5 rounded-md text-[9px] uppercase font-black bg-indigo-100 text-indigo-800">
                       {post.gender}
                     </span>
                   </div>
@@ -867,7 +867,7 @@ export const StudentDashboard: React.FC = () => {
               </div>
 
               <div>
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-black uppercase">
+                <span className="px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-black uppercase">
                   Dormiqa Verified Pass
                 </span>
                 <h3 className="font-extrabold text-base text-slate-900 dark:text-slate-100 mt-2">

@@ -261,10 +261,10 @@ export const ManageUnitSalesModal: React.FC<ManageUnitSalesModalProps> = ({
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase border border-emerald-500/30">
+                  <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase border border-emerald-500/30">
                     Agent Operations Desk
                   </span>
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                  <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase ${
                     unitStatus === 'occupied' 
                       ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
                       : unitStatus === 'under_renovation'
@@ -498,7 +498,7 @@ export const ManageUnitSalesModal: React.FC<ManageUnitSalesModalProps> = ({
                       Mark Unit / Property as Under Renovation
                     </label>
                     {isUnderRenovation && (
-                      <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[10px] font-bold uppercase border border-amber-500/30">
+                      <span className="px-2.5 py-0.5 rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[10px] font-bold uppercase border border-amber-500/30">
                         Renovation Mode Active
                       </span>
                     )}

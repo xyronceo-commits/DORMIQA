@@ -129,7 +129,7 @@ export const InfoHub: React.FC<InfoHubProps> = ({ initialDocId = 'terms-and-cond
         <div className="absolute -right-10 -bottom-10 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         
         <div className="max-w-3xl space-y-4 relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider">
             <Building2 className="w-3.5 h-3.5" />
             <span>Dormiqa Knowledge Base & Legal Documentation</span>
           </div>

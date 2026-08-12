@@ -253,7 +253,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           profile = {
             id: fUser.uid,
             email: fUser.email || '',
-            name: fUser.displayName || 'Dormiqa User',
+            name: fUser.displayName || (fUser.email ? fUser.email.split('@')[0].charAt(0).toUpperCase() + fUser.email.split('@')[0].slice(1) : 'User'),
             role: 'student',
             avatar: fUser.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
             createdAt: new Date().toISOString(),
@@ -319,7 +319,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userObj: User = profile || {
         id: fUser.uid,
         email: fUser.email || '',
-        name: fUser.displayName || 'Dormiqa User',
+        name: fUser.displayName || (fUser.email ? fUser.email.split('@')[0].charAt(0).toUpperCase() + fUser.email.split('@')[0].slice(1) : 'User'),
         role: userRole,
         avatar: fUser.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
         createdAt: new Date().toISOString(),
@@ -407,7 +407,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...(profile || {
           id: fUser.uid,
           email: fUser.email || email,
-          name: fUser.displayName || 'Dormiqa User',
+          name: fUser.displayName || (email ? email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1) : 'User'),
           role: targetRole,
           avatar: fUser.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
           createdAt: new Date().toISOString()

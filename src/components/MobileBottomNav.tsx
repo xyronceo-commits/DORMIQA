@@ -59,7 +59,7 @@ export const MobileBottomNav: React.FC = () => {
           <div className="relative inline-block">
             <Bookmark className="w-5 h-5 mb-0.5" />
             {savedListingIds.length > 0 && (
-              <span className="absolute -top-1 -right-2 bg-emerald-600 text-white text-[9px] font-extrabold w-3.5 h-3.5 rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-2 bg-emerald-600 text-white text-[9px] font-extrabold w-3.5 h-3.5 rounded-md flex items-center justify-center">
                 {savedListingIds.length}
               </span>
             )}

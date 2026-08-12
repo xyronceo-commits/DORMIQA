@@ -66,7 +66,7 @@ export const UserProfileSection: React.FC = () => {
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100">{user.name}</h2>
-                  <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 text-[10px] font-black uppercase tracking-wider">
+                  <span className="px-2.5 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 text-[10px] font-black uppercase tracking-wider">
                     {user.role}
                   </span>
                 </div>
