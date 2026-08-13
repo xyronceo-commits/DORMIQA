@@ -3,21 +3,23 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { AmbassadorDashboard } from './components/AmbassadorDashboard';
+import { ReferralTracker } from './components/ReferralTracker';
+import { EarningsPayouts } from './components/EarningsPayouts';
+import { MarketingResources } from './components/MarketingResources';
+import { AmbassadorProfile } from './components/AmbassadorProfile';
+import { AdminPortal } from './components/AdminPortal';
 import { LandingPage } from './components/LandingPage';
 import { SearchFilters } from './components/SearchFilters';
 import { StudentDashboard } from './components/StudentDashboard';
 import { AgentDashboard } from './components/AgentDashboard';
-import { AdminDashboard } from './components/AdminDashboard';
 import { OnboardingRoleSelect } from './components/OnboardingRoleSelect';
 import { ListingDetailModal } from './components/ListingDetailModal';
 import { InspectionModal } from './components/InspectionModal';
 import { ReportModal } from './components/ReportModal';
 import { AuthModal } from './components/AuthModal';
 import { UserProfileModal } from './components/UserProfileModal';
-import { UserProfilePage } from './components/UserProfilePage';
-import { BusinessVerificationPage } from './components/BusinessVerificationPage';
 import { InfoHub } from './components/InfoHub';
-import { AiChatbot } from './components/AiChatbot';
 import { RealtimeChatModal } from './components/RealtimeChatModal';
 import { AdminLoginModal } from './components/AdminLoginModal';
 import { VerificationCodeModal } from './components/VerificationCodeModal';
@@ -25,49 +27,38 @@ import { ToastContainer } from './components/ToastContainer';
 import { MobileBottomNav } from './components/MobileBottomNav';
 
 const MainContent: React.FC = () => {
-  const { user, activeView, setActiveView, selectedInfoDocId, setAuthModalOpen, setAuthModalTab } = useAuth();
+  const { user, activeView, selectedInfoDocId } = useAuth();
 
   React.useEffect(() => {
     const titles: Record<string, string> = {
-      home: 'Dormiqa — Find Trusted Accommodation',
-      search: 'Dormiqa — Search Student Housing',
-      saved: 'Dormiqa — Saved Accommodations',
-      profile: 'Dormiqa — My Profile',
-      student_dashboard: 'Dormiqa — Student Dashboard',
-      agent_dashboard: 'Dormiqa — Agent Portal',
-      agent_verification: 'Dormiqa — Business Verification',
-      admin_dashboard: 'Dormiqa Admin — Internal Dashboard',
-      info_hub: 'Dormiqa — Student Info Hub',
+      home: 'DORMIQA Ambassador Portal — Campus Student Acquisition',
+      ambassador_dashboard: 'DORMIQA Ambassador Portal — Performance Dashboard',
+      referrals: 'DORMIQA Ambassador Portal — Referral Tracking & Leads',
+      earnings: 'DORMIQA Ambassador Portal — Earnings & Commissions',
+      payouts: 'DORMIQA Ambassador Portal — Bank Payouts',
+      resources: 'DORMIQA Ambassador Portal — Marketing Assets & Collateral',
+      profile: 'DORMIQA Ambassador Portal — Ambassador Profile & Bank Setup',
+      admin_dashboard: 'DORMIQA Ambassador Portal — Internal Admin Control Center',
+      info_hub: 'DORMIQA — Knowledge Base & Legal Docs',
     };
-    document.title = titles[activeView] || 'Dormiqa — Find Trusted Accommodation';
+    document.title = titles[activeView] || 'DORMIQA Ambassador Portal — Campus Referral Platform';
   }, [activeView]);
-
-  React.useEffect(() => {
-    if (!user && activeView !== 'home' && activeView !== 'role_select' && activeView !== 'onboarding' && activeView !== 'info_hub') {
-      setAuthModalTab('student_signup');
-      setAuthModalOpen(true);
-      setActiveView('home');
-    } else if (user && user.emailVerified === false) {
-      const isProtectedDashboard = ['student_dashboard', 'agent_dashboard', 'agent_verification', 'admin_dashboard'].includes(activeView);
-      if (isProtectedDashboard) {
-        setAuthModalTab('email_verification_sent');
-        setAuthModalOpen(true);
-        setActiveView('home');
-      }
-    }
-  }, [user, activeView, setActiveView, setAuthModalOpen, setAuthModalTab]);
 
   return (
     <main className="flex-1 min-h-[80vh] pb-16 md:pb-0">
-      {activeView === 'home' && <LandingPage />}
+      {(activeView === 'home' || activeView === 'ambassador_dashboard') && <AmbassadorDashboard />}
+      {activeView === 'referrals' && <ReferralTracker />}
+      {(activeView === 'earnings' || activeView === 'payouts') && <EarningsPayouts />}
+      {activeView === 'resources' && <MarketingResources />}
+      {activeView === 'profile' && <AmbassadorProfile />}
+      {activeView === 'admin_dashboard' && <AdminPortal />}
+      
+      {/* Legacy / Student App Views (Preserved) */}
+      {activeView === 'search' && <SearchFilters />}
+      {activeView === 'saved' && <SearchFilters />}
+      {activeView === 'student_dashboard' && <StudentDashboard />}
+      {activeView === 'agent_dashboard' && <AgentDashboard />}
       {activeView === 'info_hub' && <InfoHub initialDocId={selectedInfoDocId} />}
-      {activeView === 'search' && user && <SearchFilters />}
-      {activeView === 'saved' && user && <SearchFilters />}
-      {activeView === 'profile' && user && <UserProfilePage />}
-      {activeView === 'student_dashboard' && user && <StudentDashboard />}
-      {activeView === 'agent_dashboard' && user && <AgentDashboard />}
-      {activeView === 'agent_verification' && user && <BusinessVerificationPage />}
-      {activeView === 'admin_dashboard' && user?.role === 'admin' && <AdminDashboard />}
       {(activeView === 'role_select' || activeView === 'onboarding') && <OnboardingRoleSelect />}
     </main>
   );
@@ -127,7 +118,6 @@ export default function App() {
           <GlobalChatModalContainer />
           <GlobalAdminModalContainer />
           <GlobalVerificationModalContainer />
-          <AiChatbot />
           <ToastContainer />
         </div>
       </AuthProvider>

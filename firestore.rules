@@ -22,7 +22,7 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Users Collection
+    // Users / Ambassador Profiles Collection
     match /users/{userId} {
       allow read: if isAuthenticated();
       allow create, update: if isAuthenticated() && request.auth.uid == userId;
@@ -34,58 +34,42 @@ service cloud.firestore {
       allow read, write: if isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Listings Collection
-    match /listings/{listingId} {
-      allow read: if true;
-      allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated();
+    // Referrals / Leads Collection
+    match /referrals/{referralId} {
+      allow read: if isAuthenticated() && (resource.data.ambassadorId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated(); // Registered via client/server onboarding
+      allow update, delete: if isAdmin(); // Only admin can modify referral status/qualification
     }
 
-    // Inspection Bookings Collection
-    match /inspections/{bookingId} {
-      allow read: if isAuthenticated();
-      allow create, update, delete: if isAuthenticated();
+    // Earnings Collection
+    match /earnings/{earningId} {
+      allow read: if isAuthenticated() && (resource.data.ambassadorId == request.auth.uid || isAdmin());
+      allow create, update, delete: if isAdmin(); // Earnings ledger managed server-side
+    }
+
+    // Payouts Collection
+    match /payouts/{payoutId} {
+      allow read: if isAuthenticated() && (resource.data.ambassadorId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.ambassadorId == request.auth.uid; // Ambassador requests payout
+      allow update, delete: if isAdmin(); // Admin approves/processes payouts
+    }
+
+    // Marketing Resources Collection
+    match /resources/{resourceId} {
+      allow read: if isAuthenticated(); // All authenticated ambassadors can view resources
+      allow create, update, delete: if isAdmin();
     }
 
     // Notifications Collection
     match /notifications/{notifId} {
-      allow read: if isAuthenticated();
-      allow create, update, delete: if isAuthenticated();
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create, update: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
-    // Reviews Collection
-    match /reviews/{reviewId} {
-      allow read: if true;
-      allow create, update, delete: if isAuthenticated();
-    }
-
-    // Agent Verifications Collection
-    match /verifications/{verifId} {
-      allow read: if isAuthenticated();
-      allow create, update, delete: if isAuthenticated();
-    }
-
-    // Safety Reports Collection
-    match /reports/{reportId} {
-      allow read: if isAuthenticated();
-      allow create, update, delete: if isAuthenticated();
-    }
-
-    // Chat Threads Collection
-    match /threads/{threadId} {
-      allow read: if isAuthenticated();
-      allow create, update, delete: if isAuthenticated();
-    }
-
-    // Email Verifications Collection (OTPs managed via server API)
+    // Email Verifications Collection
     match /emailVerifications/{verificationId} {
       allow read, write: if true;
-    }
-
-    // Chat Messages Collection
-    match /messages/{messageId} {
-      allow read: if isAuthenticated();
-      allow create, update, delete: if isAuthenticated();
     }
   }
 }

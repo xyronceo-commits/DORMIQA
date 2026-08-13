@@ -8,62 +8,80 @@
         "email": { "type": "string" },
         "name": { "type": "string" },
         "role": { "type": "string" },
-        "universityId": { "type": "string" },
-        "universityName": { "type": "string" },
-        "avatar": { "type": "string" },
         "phone": { "type": "string" },
-        "isVerifiedAgent": { "type": "boolean" },
-        "verificationStatus": { "type": "string" },
+        "universityName": { "type": "string" },
+        "ambassadorId": { "type": "string" },
+        "referralCode": { "type": "string" },
+        "ambassadorStatus": { "type": "string" },
+        "bankName": { "type": "string" },
+        "accountNumber": { "type": "string" },
+        "accountName": { "type": "string" },
+        "emailVerified": { "type": "boolean" },
         "createdAt": { "type": "string" }
       },
       "required": ["id", "email", "name", "role"]
     },
-    "listings": {
-      "title": "Listing",
+    "referrals": {
+      "title": "ReferralLead",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "referralCode": { "type": "string" },
+        "ambassadorId": { "type": "string" },
+        "studentMaskedId": { "type": "string" },
+        "universityName": { "type": "string" },
+        "status": { "type": "string" },
+        "stage": { "type": "string" },
+        "conversionStatus": { "type": "string" },
+        "earningsAmount": { "type": "number" },
+        "date": { "type": "string" },
+        "lastActivity": { "type": "string" }
+      },
+      "required": ["id", "referralCode", "ambassadorId", "status"]
+    },
+    "earnings": {
+      "title": "EarningRecord",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ambassadorId": { "type": "string" },
+        "referralId": { "type": "string" },
+        "studentMaskedId": { "type": "string" },
+        "amount": { "type": "number" },
+        "status": { "type": "string" },
+        "description": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "ambassadorId", "amount", "status"]
+    },
+    "payouts": {
+      "title": "PayoutRecord",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ambassadorId": { "type": "string" },
+        "amount": { "type": "number" },
+        "status": { "type": "string" },
+        "bankName": { "type": "string" },
+        "accountNumber": { "type": "string" },
+        "accountName": { "type": "string" },
+        "requestedAt": { "type": "string" }
+      },
+      "required": ["id", "ambassadorId", "amount", "status", "bankName", "accountNumber"]
+    },
+    "resources": {
+      "title": "MarketingResource",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
         "title": { "type": "string" },
-        "universityId": { "type": "string" },
-        "universityName": { "type": "string" },
-        "campus": { "type": "string" },
-        "address": { "type": "string" },
-        "type": { "type": "string" },
-        "price": { "type": "number" },
-        "currency": { "type": "string" },
-        "pricePeriod": { "type": "string" },
-        "totalRooms": { "type": "number" },
-        "availableRooms": { "type": "number" },
-        "gender": { "type": "string" },
-        "distanceToCampusMinutes": { "type": "number" },
-        "distanceToCampusKm": { "type": "number" },
+        "category": { "type": "string" },
         "description": { "type": "string" },
-        "facilities": { "type": "array" },
-        "images": { "type": "array" },
-        "agentId": { "type": "string" },
-        "agentName": { "type": "string" },
-        "agentPhone": { "type": "string" },
-        "status": { "type": "string" },
+        "downloadCount": { "type": "number" },
+        "format": { "type": "string" },
         "createdAt": { "type": "string" }
       },
-      "required": ["id", "title", "universityId", "price", "agentId"]
-    },
-    "inspections": {
-      "title": "InspectionBooking",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "listingId": { "type": "string" },
-        "listingTitle": { "type": "string" },
-        "studentId": { "type": "string" },
-        "studentName": { "type": "string" },
-        "agentId": { "type": "string" },
-        "date": { "type": "string" },
-        "timeSlot": { "type": "string" },
-        "status": { "type": "string" },
-        "createdAt": { "type": "string" }
-      },
-      "required": ["id", "listingId", "studentId", "agentId", "date", "timeSlot"]
+      "required": ["id", "title", "category"]
     },
     "notifications": {
       "title": "NotificationItem",

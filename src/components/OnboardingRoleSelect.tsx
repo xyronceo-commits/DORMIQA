@@ -157,7 +157,7 @@ export const OnboardingRoleSelect: React.FC = () => {
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-indigo-500 shrink-0" />
-                <span>Gemini AI marketing description generator</span>
+                <span>Automated marketing description tools</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-indigo-500 shrink-0" />

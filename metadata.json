@@ -1,6 +1,6 @@
 {
-  "name": "Dormiqa",
-  "description": "Student accommodation, made simpler. Connecting students with verified agents for hostels, apartments, and lodges near universities.",
+  "name": "DORMIQA Ambassador Portal",
+  "description": "Official private ambassador acquisition, referral tracking, earnings, and campaign portal for DORMIQA.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

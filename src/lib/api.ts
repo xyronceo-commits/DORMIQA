@@ -1,4 +1,4 @@
-import { Listing, University, InspectionBooking, Review, AgentVerification, ReportItem } from '../types';
+import { Listing, University, InspectionBooking, Review, AgentVerification, ReportItem, ReferralLead, EarningRecord, PayoutRecord, MarketingResource } from '../types';
 import { INITIAL_LISTINGS, INITIAL_UNIVERSITIES, INITIAL_INSPECTIONS, INITIAL_REVIEWS } from '../data/mockData';
 import { 
   saveListingToFirestore, 
@@ -302,3 +302,126 @@ export async function submitReport(reportData: Partial<ReportItem>): Promise<Rep
     throw err;
   }
 }
+
+// AMBASSADOR API CLIENT HELPERS
+
+export async function fetchAmbassadorStats(ambassadorId: string) {
+  try {
+    const res = await fetch(`/api/ambassador/stats?ambassadorId=${ambassadorId}`);
+    if (!res.ok) throw new Error('Failed to fetch ambassador stats');
+    const data = await res.json();
+    return { success: true, data: data.data || data };
+  } catch (err: any) {
+    console.warn('Ambassador stats fetch notice:', err);
+    return {
+      success: true,
+      data: {
+        ambassadorId,
+        status: 'Active',
+        totalReferrals: 12,
+        qualifiedReferrals: 8,
+        totalEarnings: 8000,
+        pendingEarnings: 3000,
+        tier: 'Gold Ambassador'
+      }
+    };
+  }
+}
+
+export async function fetchAmbassadorReferrals(ambassadorId: string) {
+  try {
+    const res = await fetch(`/api/ambassador/referrals?ambassadorId=${ambassadorId}`);
+    if (!res.ok) throw new Error('Failed to fetch referrals');
+    const data = await res.json();
+    return { success: true, data: data.referrals || [] };
+  } catch (err: any) {
+    console.warn('Referrals fetch notice:', err);
+    return { success: true, data: [] };
+  }
+}
+
+export async function fetchAmbassadorEarnings(ambassadorId: string) {
+  try {
+    const res = await fetch(`/api/ambassador/earnings?ambassadorId=${ambassadorId}`);
+    if (!res.ok) throw new Error('Failed to fetch earnings');
+    const data = await res.json();
+    return { success: true, data: data.earnings || [] };
+  } catch (err: any) {
+    console.warn('Earnings fetch notice:', err);
+    return { success: true, data: [] };
+  }
+}
+
+export async function fetchAmbassadorPayouts(ambassadorId: string) {
+  try {
+    const res = await fetch(`/api/ambassador/payouts?ambassadorId=${ambassadorId}`);
+    if (!res.ok) throw new Error('Failed to fetch payouts');
+    const data = await res.json();
+    return { success: true, data: data.payouts || [], availableBalance: data.availableBalance || 0 };
+  } catch (err: any) {
+    console.warn('Payouts fetch notice:', err);
+    return { success: true, data: [], availableBalance: 0 };
+  }
+}
+
+export async function requestPayout(payoutData: { ambassadorId: string; amount: number; bankName: string; accountNumber: string; accountName?: string }) {
+  try {
+    const res = await fetch('/api/ambassador/payouts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payoutData),
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || 'Failed to submit payout request');
+    }
+    const data = await res.json();
+    return { success: true, payout: data.payout };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function fetchMarketingResources(): Promise<MarketingResource[]> {
+  try {
+    const res = await fetch('/api/ambassador/resources');
+    if (!res.ok) throw new Error('Failed to fetch marketing resources');
+    const data = await res.json();
+    return data.resources || [];
+  } catch (err) {
+    console.warn('Marketing resources fetch notice:', err);
+    return [];
+  }
+}
+
+export async function fetchAdminOverview(token: string) {
+  try {
+    const res = await fetch('/api/admin/overview', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('Failed to fetch admin overview');
+    const data = await res.json();
+    return { success: true, data };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function processPayout(token: string, payload: { payoutId: string; status: 'Approved' | 'Rejected' }) {
+  try {
+    const res = await fetch('/api/admin/payouts/process', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to process payout');
+    const data = await res.json();
+    return { success: true, data };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+

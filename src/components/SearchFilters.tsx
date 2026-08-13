@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { fetchListings } from '../lib/api';
 import { subscribeFirestoreListings } from '../lib/firebase';
-import { searchAccommodationWithAi } from '../lib/gemini';
 import { ListingCard } from './ListingCard';
 import { Listing, Facility } from '../types';
 import { INITIAL_UNIVERSITIES } from '../data/mockData';
@@ -24,16 +23,11 @@ export const SearchFilters: React.FC = () => {
   const [maxDistanceMinutes, setMaxDistanceMinutes] = useState<number | ''>('');
   const [sortBy, setSortBy] = useState<'price_asc' | 'price_desc' | 'distance' | 'rating' | 'newest'>('newest');
 
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiExplanation, setAiExplanation] = useState<string | null>(null);
-  const [showAiSearch, setShowAiSearch] = useState(false);
-
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 
-  const loadData = async (aiMatchedIds?: string[]) => {
+  const loadData = async () => {
     setLoading(true);
     try {
       const data = await fetchListings({
@@ -45,10 +39,6 @@ export const SearchFilters: React.FC = () => {
       });
 
       let results = [...data];
-
-      if (aiMatchedIds && aiMatchedIds.length > 0) {
-        results = results.filter(l => aiMatchedIds.includes(l.id));
-      }
 
       if (selectedOwnership !== 'all') {
         results = results.filter(l => {
@@ -128,23 +118,6 @@ export const SearchFilters: React.FC = () => {
     sortBy
   ]);
 
-  const handleAiSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!aiPrompt.trim()) return;
-    setAiLoading(true);
-    setAiExplanation(null);
-    try {
-      const result = await searchAccommodationWithAi(aiPrompt);
-      setAiExplanation(result.explanation);
-      addToast('AI Search Complete', `Matched listings for "${aiPrompt}"`, 'success');
-      loadData(result.matchedListingIds);
-    } catch (err) {
-      addToast('Error', 'AI search failed, fallback filters applied', 'warning');
-    } finally {
-      setAiLoading(false);
-    }
-  };
-
   const toggleFacility = (fac: Facility) => {
     setSelectedFacilities(prev => 
       prev.includes(fac) ? prev.filter(f => f !== fac) : [...prev, fac]
@@ -162,8 +135,6 @@ export const SearchFilters: React.FC = () => {
     setSelectedFacilities([]);
     setOnlyVerified(false);
     setMaxDistanceMinutes('');
-    setAiExplanation(null);
-    setAiPrompt('');
   };
 
   const activeFilterCount = 
@@ -305,11 +276,11 @@ export const SearchFilters: React.FC = () => {
               </select>
             </div>
 
-            {/* Filters & AI Search Buttons */}
+            {/* Filters Button */}
             <div className="md:col-span-3 flex items-center gap-2">
               <button
                 onClick={() => setIsFilterDrawerOpen(true)}
-                className="flex-1 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-xs flex items-center justify-center gap-2 transition-colors"
+                className="w-full py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-xs flex items-center justify-center gap-2 transition-colors"
               >
                 <SlidersHorizontal className="w-3.5 h-3.5" />
                 <span>Filters</span>
@@ -318,18 +289,6 @@ export const SearchFilters: React.FC = () => {
                     {activeFilterCount}
                   </span>
                 )}
-              </button>
-
-              <button
-                onClick={() => setShowAiSearch(!showAiSearch)}
-                className={`py-2.5 px-3 rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors ${
-                  showAiSearch
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-                }`}
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>AI Prompt</span>
               </button>
             </div>
 
@@ -358,48 +317,6 @@ export const SearchFilters: React.FC = () => {
               </button>
             ))}
           </div>
-
-          {/* Optional Natural Language AI Prompt Box */}
-          <AnimatePresence>
-            {showAiSearch && (
-              <motion.form
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                onSubmit={handleAiSearch}
-                className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2"
-              >
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={aiPrompt}
-                    onChange={(e) => setAiPrompt(e.target.value)}
-                    placeholder="Describe your ideal stay e.g. Self-contain under ₦350k with 24/7 solar power..."
-                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs focus:outline-none"
-                  />
-                  <button
-                    type="submit"
-                    disabled={aiLoading}
-                    className="px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs transition-colors shrink-0 flex items-center gap-1.5"
-                  >
-                    {aiLoading ? (
-                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>Search</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-                {aiExplanation && (
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                    {aiExplanation}
-                  </p>
-                )}
-              </motion.form>
-            )}
-          </AnimatePresence>
 
         </div>
 

@@ -33,7 +33,8 @@ export const Header: React.FC = () => {
     setAgentActiveTab,
     setProfileModalOpen,
     requestNotificationPermission,
-    setIsAdminModalOpen
+    setIsAdminModalOpen,
+    setChatModalOpen
   } = useAuth();
 
   const { theme, effectiveTheme, toggleTheme, setTheme } = useTheme();
@@ -65,13 +66,18 @@ export const Header: React.FC = () => {
         {/* Left Brand Logo & Location/University Selector */}
         <div className="flex items-center gap-3 lg:gap-6 shrink-0">
           <button
-            onClick={() => setActiveView('home')}
-            className="focus:outline-none group text-left"
+            onClick={() => setActiveView('ambassador_dashboard')}
+            className="focus:outline-none group text-left flex items-center gap-2.5"
           >
             <DormiqaLogo size="md" />
+            <div className="hidden sm:flex flex-col">
+              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-200/50 dark:border-emerald-800/50">
+                AMBASSADOR PORTAL
+              </span>
+            </div>
           </button>
 
-          {/* Location / University Picker Dropdown */}
+          {/* Institution Selector */}
           <div className="relative">
             <button
               onClick={() => setIsUniDropdownOpen(!isUniDropdownOpen)}
@@ -190,86 +196,63 @@ export const Header: React.FC = () => {
         {/* Center Primary Navigation Links (Desktop) */}
         <nav className="hidden lg:flex items-center gap-6">
           <button
-            onClick={() => setActiveView('search')}
+            onClick={() => setActiveView('ambassador_dashboard')}
             className={`text-sm font-semibold transition-colors flex items-center gap-1.5 ${
-              activeView === 'home' || activeView === 'search'
-                ? 'text-emerald-600 dark:text-emerald-400 font-bold'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <span>Discover</span>
-          </button>
-
-          <button
-            onClick={() => {
-              if (!user) {
-                setAuthModalTab('student_signup');
-                setAuthModalOpen(true);
-              } else {
-                setActiveView('saved');
-              }
-            }}
-            className={`text-sm font-semibold transition-colors flex items-center gap-1.5 ${
-              activeView === 'saved'
-                ? 'text-emerald-600 dark:text-emerald-400 font-bold'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <span>Saved</span>
-            {savedListingIds.length > 0 && (
-              <span className="px-1.5 py-0.2 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] rounded-md font-extrabold">
-                {savedListingIds.length}
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() => {
-              if (!user) {
-                setAuthModalTab('student_signup');
-                setAuthModalOpen(true);
-              } else {
-                setChatModalOpen(true);
-              }
-            }}
-            className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5"
-          >
-            <span>Messages</span>
-          </button>
-
-          <button
-            onClick={() => {
-              if (!user) {
-                setAuthModalTab('login');
-                setAuthModalOpen(true);
-              } else {
-                setActiveView(role === 'agent' ? 'agent_dashboard' : 'student_dashboard');
-              }
-            }}
-            className={`text-sm font-semibold transition-colors flex items-center gap-1.5 ${
-              activeView === 'student_dashboard' || activeView === 'agent_dashboard'
+              activeView === 'home' || activeView === 'ambassador_dashboard'
                 ? 'text-emerald-600 dark:text-emerald-400 font-bold'
                 : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <span>Dashboard</span>
           </button>
+
+          <button
+            onClick={() => setActiveView('referrals')}
+            className={`text-sm font-semibold transition-colors flex items-center gap-1.5 ${
+              activeView === 'referrals'
+                ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <span>Referrals</span>
+          </button>
+
+          <button
+            onClick={() => setActiveView('earnings')}
+            className={`text-sm font-semibold transition-colors flex items-center gap-1.5 ${
+              activeView === 'earnings'
+                ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <span>Earnings</span>
+          </button>
+
+          <button
+            onClick={() => setActiveView('payouts')}
+            className={`text-sm font-semibold transition-colors flex items-center gap-1.5 ${
+              activeView === 'payouts'
+                ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <span>Payouts</span>
+          </button>
+
+          <button
+            onClick={() => setActiveView('resources')}
+            className={`text-sm font-semibold transition-colors flex items-center gap-1.5 ${
+              activeView === 'resources'
+                ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <span>Resources</span>
+          </button>
         </nav>
 
-        {/* Right Actions: AI Search & Chat, Notifications, Account, Menu, Shield */}
+        {/* Right Actions: Notifications, Account, Menu, Shield */}
         <div className="flex items-center gap-2 sm:gap-3">
-
-          {/* AI Search & Chat Button */}
-          <button
-            onClick={() => {
-              setActiveView('search');
-            }}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors border border-emerald-200/60 dark:border-emerald-800/60"
-            title="AI Search & Chat"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>AI Search & Chat</span>
-          </button>
 
           {/* Theme Toggle */}
           <button

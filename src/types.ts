@@ -1,22 +1,103 @@
-export type UserRole = 'student' | 'agent' | 'admin' | 'guest';
+export type UserRole = 'ambassador' | 'admin' | 'student' | 'agent' | 'guest';
+
+export type AmbassadorStatus = 'Pending' | 'Active' | 'Suspended' | 'Inactive';
 
 export interface User {
   id: string;
   email: string;
   name: string;
   role: UserRole;
+  phone?: string;
+  avatar?: string;
   universityId?: string;
   universityName?: string;
-  avatar?: string;
-  phone?: string;
+  ambassadorId?: string; // e.g. "DORMIQA-001"
+  referralCode?: string;  // e.g. "DORMIQA-001"
+  ambassadorStatus?: AmbassadorStatus;
+  bankName?: string;
+  accountNumber?: string;
+  accountName?: string;
   isVerifiedAgent?: boolean;
-  verificationStatus?: 'none' | 'pending' | 'verified' | 'rejected';
-  emailVerified?: boolean;
-  businessName?: string;
-  proofType?: 'banner' | 'logo' | 'office_photo' | 'cac' | 'other';
-  proofUrl?: string;
   agentPhotoUrl?: string;
-  officeAddress?: string;
+  verificationStatus?: string;
+  businessName?: string;
+  emailVerified?: boolean;
+  createdAt: string;
+}
+
+export interface AmbassadorStats {
+  totalReferrals: number;
+  qualifiedReferrals: number;
+  totalEarnings: number;
+  pendingEarnings: number;
+  tier?: string;
+}
+
+export type ReferralStatus = 
+  | 'CLICKED' 
+  | 'REGISTERED' 
+  | 'EMAIL_VERIFIED' 
+  | 'ONBOARDING' 
+  | 'QUALIFIED' 
+  | 'VALID' 
+  | 'REJECTED' 
+  | 'FRAUD_REVIEW';
+
+export interface ReferralLead {
+  id: string;
+  referralCode: string; // e.g. DORMIQA-001
+  ambassadorId: string; // Ambassador User ID
+  studentMaskedId: string; // e.g. STU-***4920 for privacy
+  universityName: string;
+  status: ReferralStatus;
+  stage: string; // e.g. "Onboarding Completed", "Email Verified"
+  conversionStatus: 'Pending' | 'Qualified' | 'Converted' | 'Rejected';
+  earningsAmount: number; // in NGN ₦
+  date: string;
+  lastActivity: string;
+  ipHash?: string;
+}
+
+export type EarningStatus = 'Pending' | 'Qualified' | 'Approved' | 'Paid' | 'Rejected';
+
+export interface EarningRecord {
+  id: string;
+  ambassadorId: string;
+  referralId: string;
+  studentMaskedId: string;
+  amount: number;
+  status: EarningStatus;
+  description: string;
+  createdAt: string;
+  approvedAt?: string;
+  paidAt?: string;
+}
+
+export type PayoutStatus = 'Pending' | 'Processing' | 'Approved' | 'Paid' | 'Rejected';
+
+export interface PayoutRecord {
+  id: string;
+  ambassadorId: string;
+  amount: number;
+  status: PayoutStatus;
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+  requestedAt: string;
+  processedAt?: string;
+  referenceNumber?: string;
+  adminNotes?: string;
+}
+
+export interface MarketingResource {
+  id: string;
+  title: string;
+  category: 'Guide' | 'Social Copy' | 'Banner Graphic' | 'Campus Flyer' | 'Video Script' | 'FAQ';
+  description: string;
+  fileUrl?: string;
+  content?: string;
+  downloadCount: number;
+  format: string; // e.g., "PNG 1080x1080", "PDF", "Text Template"
   createdAt: string;
 }
 

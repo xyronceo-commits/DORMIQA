@@ -29,34 +29,34 @@ export const Footer: React.FC = () => {
           {/* Brand & Mission Info */}
           <div className="lg:col-span-2 space-y-4">
             <div 
-              onClick={() => setActiveView('home')} 
+              onClick={() => setActiveView('ambassador_dashboard')} 
               className="cursor-pointer inline-block"
             >
               <DormiqaLogo size="md" textColor="text-white" pinColor="#10b981" />
             </div>
             <p className="text-xs text-neutral-400 leading-relaxed max-w-sm font-normal">
-              Africa's premier student accommodation platform. Connecting university students with verified agents for hostels, self-contain apartments, and lodges near major African campuses.
+              Official DORMIQA Ambassador Portal. The private campus student acquisition, referral tracking, and commission payout platform for DORMIQA Nigeria.
             </p>
             <div className="pt-1 flex flex-wrap items-center gap-2 text-[11px] font-bold text-neutral-300">
               <button 
-                onClick={() => openDoc('about-dormiqa')} 
+                onClick={() => setActiveView('ambassador_dashboard')} 
                 className="hover:text-emerald-400 underline"
               >
-                About Us
+                Ambassador Dashboard
               </button>
               <span>•</span>
               <button 
-                onClick={() => openDoc('how-it-works')} 
+                onClick={() => setActiveView('referrals')} 
                 className="hover:text-emerald-400 underline"
               >
-                How It Works
+                Track Leads
               </button>
               <span>•</span>
               <button 
-                onClick={() => openDoc('anti-fraud')} 
+                onClick={() => setActiveView('earnings')} 
                 className="hover:text-emerald-400 underline"
               >
-                Anti-Fraud Policy
+                Commission Rates
               </button>
             </div>
           </div>

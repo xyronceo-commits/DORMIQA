@@ -67,6 +67,7 @@ interface AuthContextType {
   clearAllNotifications: () => void;
   toasts: ToastMessage[];
   addToast: (title: string, message?: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
+  addNotification: (item: { title: string; message?: string; type?: 'success' | 'error' | 'info' | 'warning' }) => void;
   removeToast: (id: string) => void;
   inspectionModalListing: Listing | null;
   setInspectionModalListing: (listing: Listing | null) => void;
@@ -220,6 +221,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setTimeout(() => {
       removeToast(id);
     }, 4000);
+  };
+
+  const addNotification = (item: { title: string; message?: string; type?: 'success' | 'error' | 'info' | 'warning' }) => {
+    addToast(item.title, item.message, item.type || 'info');
   };
 
   const removeToast = (id: string) => {
@@ -577,6 +582,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         clearAllNotifications,
         toasts,
         addToast,
+        addNotification,
         removeToast,
         inspectionModalListing,
         setInspectionModalListing,

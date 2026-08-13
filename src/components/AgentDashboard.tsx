@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { fetchAgentListings, fetchAgentInspections, updateInspectionStatus, createListing, submitAgentVerification } from '../lib/api';
 import { saveListingToFirestore, fetchFirestoreListings, subscribeFirestoreInspections, subscribeFirestoreListings, sendFirestoreNotification, updateListingInFirestore, uploadFileToFirebaseStorage } from '../lib/firebase';
-import { generateListingDescription, reviewListingWithAi } from '../lib/gemini';
 import { getGoogleCalendarUrl, downloadIcsFile } from '../lib/calendar';
 import { AgentPhotoUploader } from './AgentPhotoUploader';
 import { Listing, InspectionBooking, Facility } from '../types';
@@ -175,30 +174,15 @@ export const AgentDashboard: React.FC = () => {
     };
   }, [user]);
 
-  const handleGenerateAiDescription = async () => {
+  const handleGenerateAiDescription = () => {
     if (!wizardTitle) {
       addToast('Input Title First', 'Please enter property title first', 'warning');
       return;
     }
-    setAiGenLoading(true);
-    try {
-      const selectedUni = INITIAL_UNIVERSITIES.find(u => u.id === wizardUniId)?.name || 'University';
-      const desc = await generateListingDescription({
-        title: wizardTitle,
-        type: wizardType,
-        universityName: selectedUni,
-        facilities: wizardFacilities,
-        price: Number(wizardPrice),
-        currency: '₦',
-        period: 'year',
-      });
-      setWizardDescription(desc);
-      addToast('AI Marketing Description Generated', 'Gemini created a student-appealing copy.');
-    } catch (err) {
-      addToast('Error', 'AI generation failed', 'error');
-    } finally {
-      setAiGenLoading(false);
-    }
+    const selectedUni = INITIAL_UNIVERSITIES.find(u => u.id === wizardUniId)?.name || 'Campus Gate';
+    const desc = `${wizardAccomTypeName || wizardTitle} located near ${selectedUni}. Features ${wizardFacilities.map(f => f.replace('_', ' ')).join(', ')} with reliable security and quick access to lectures.`;
+    setWizardDescription(desc);
+    addToast('Description Template Created', 'Generated a marketing copy template for your listing.');
   };
 
   const handleCreateListing = async (e: React.FormEvent) => {
@@ -278,57 +262,27 @@ export const AgentDashboard: React.FC = () => {
 
       const newListing = await createListing(initialListingData);
 
-      // Step 2: Instant AI Review (< 2 seconds)
-      const reviewResult = await reviewListingWithAi({
-        id: newListing.id,
-        title: wizardTitle,
-        address: wizardAddress,
-        universityName: selectedUni.name,
-        price: Number(wizardPrice),
-        imagesCount: wizardImages.length,
-        video360Url: wizardVideo360Url,
-        description: wizardDescription,
-        agentId: user?.id || 'agent_01'
-      });
-
-      const finalStatus = reviewResult.approved ? 'active' : 'rejected';
       const updatedListing: Listing = {
         ...newListing,
-        status: finalStatus as any,
+        status: 'active',
       };
 
       setAgentListings(prev => [updatedListing, ...prev]);
       await saveListingToFirestore(updatedListing);
       setActiveTab('listings');
 
-      // Step 3: Trigger instant notification to Agent
-      if (reviewResult.approved) {
-        addToast(
-          'Listing Approved! 🎉',
-          'Your accommodation passed AI verification and is now live on student timelines.',
-          'success'
-        );
-        await sendFirestoreNotification({
-          userId: user?.id || 'agent_01',
-          type: 'system',
-          title: 'Listing Approved! 🎉',
-          body: `Your hostel listing "${wizardTitle}" has been verified by Dormiqa AI and is now live on student timelines!`,
-          read: false,
-        });
-      } else {
-        addToast(
-          'Listing Unapproved ⚠️',
-          `Reason: ${reviewResult.reason}`,
-          'error'
-        );
-        await sendFirestoreNotification({
-          userId: user?.id || 'agent_01',
-          type: 'system',
-          title: 'Listing Unapproved ⚠️',
-          body: `Your hostel listing "${wizardTitle}" was unapproved by AI review. Reason: ${reviewResult.reason}`,
-          read: false,
-        });
-      }
+      addToast(
+        'Listing Published Live! 🎉',
+        'Your accommodation listing is now active on student timelines.',
+        'success'
+      );
+      await sendFirestoreNotification({
+        userId: user?.id || 'agent_01',
+        type: 'system',
+        title: 'Listing Published! 🎉',
+        body: `Your hostel listing "${wizardTitle}" is live on student timelines!`,
+        read: false,
+      });
 
       // Reset form fields
       setWizardTitle('');
@@ -346,45 +300,13 @@ export const AgentDashboard: React.FC = () => {
   };
 
   const handleReReviewListing = async (listing: Listing) => {
-    addToast('Re-assessing Listing...', 'Dormiqa AI is auditing your listing... ⚡', 'info');
+    addToast('Request Submitted', 'Listing submitted for admin re-audit.', 'info');
     try {
-      const result = await reviewListingWithAi({
-        id: listing.id,
-        title: listing.title,
-        address: listing.address,
-        universityName: listing.universityName,
-        price: listing.price,
-        imagesCount: listing.images.length,
-        video360Url: listing.video360Url || listing.videoUrl,
-        description: listing.description,
-        agentId: user?.id || listing.agentId
-      });
-
-      const newStatus = result.approved ? 'active' : 'rejected';
-      setAgentListings(prev => prev.map(l => l.id === listing.id ? { ...l, status: newStatus as any } : l));
-      await updateListingInFirestore(listing.id, { status: newStatus as any });
-
-      if (result.approved) {
-        addToast('Listing Approved! 🎉', 'Your listing passed AI review and is now live for students.', 'success');
-        await sendFirestoreNotification({
-          userId: user?.id || 'agent_01',
-          type: 'system',
-          title: 'Listing Approved! 🎉',
-          body: `Your hostel listing "${listing.title}" passed AI review and is now live on student timelines!`,
-          read: false,
-        });
-      } else {
-        addToast('Listing Unapproved ⚠️', `Reason: ${result.reason}`, 'error');
-        await sendFirestoreNotification({
-          userId: user?.id || 'agent_01',
-          type: 'system',
-          title: 'Listing Unapproved ⚠️',
-          body: `Your listing "${listing.title}" was unapproved by AI review. Reason: ${result.reason}`,
-          read: false,
-        });
-      }
-    } catch (err) {
-      addToast('Error', 'Failed to re-review listing', 'error');
+      setAgentListings(prev => prev.map(l => l.id === listing.id ? { ...l, status: 'pending' as any } : l));
+      await updateListingInFirestore(listing.id, { status: 'pending' as any });
+      addToast('Re-audit Submitted', 'Your listing status is reset to pending review.', 'success');
+    } catch {
+      addToast('Error', 'Failed to submit re-audit request.', 'error');
     }
   };
 
@@ -684,7 +606,7 @@ export const AgentDashboard: React.FC = () => {
                             onClick={() => handleReReviewListing(listing)}
                             className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-bold transition inline-flex items-center gap-1"
                           >
-                            <Sparkles className="w-3 h-3" /> Re-audit AI
+                            Request Re-audit
                           </button>
                         )}
                         <button
@@ -1115,25 +1037,23 @@ export const AgentDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* AI Description Field */}
+            {/* Property Description Field */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">Property Description</label>
                 <button
                   type="button"
                   onClick={handleGenerateAiDescription}
-                  disabled={aiGenLoading}
                   className="px-3 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold flex items-center gap-1 transition-all"
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  {aiGenLoading ? 'Generating with Gemini...' : '✨ Auto-Generate Description'}
+                  <span>Auto-Generate Copy Template</span>
                 </button>
               </div>
               <textarea
                 value={wizardDescription}
                 onChange={e => setWizardDescription(e.target.value)}
                 rows={4}
-                placeholder="Click the button above to auto-generate a high-converting student marketing description with Gemini AI..."
+                placeholder="Provide detailed description of the property, proximity to campus gates, facilities, power schedule..."
                 className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100 leading-relaxed"
               />
             </div>

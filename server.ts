@@ -1228,7 +1228,446 @@ Office Address: ${officeAddress || 'Not provided'}`,
   // ==========================================
   const adminSessions = new Map<string, { createdAt: number; expiresAt: number }>();
 
-  // Rate Limiter for Admin Login Attempts (5 attempts per 15 minutes)
+  // ==========================================
+  // AMBASSADOR PORTAL BACKEND DATA STORES & APIS
+  // ==========================================
+  
+  interface AmbassadorStoreItem {
+    id: string;
+    email: string;
+    name: string;
+    phone: string;
+    universityName: string;
+    ambassadorId: string; // e.g. DORMIQA-001
+    referralCode: string;
+    ambassadorStatus: 'Pending' | 'Active' | 'Suspended' | 'Inactive';
+    totalReferrals: number;
+    successfulReferrals: number;
+    pendingReferrals: number;
+    totalEarnings: number;
+    pendingEarnings: number;
+    paidEarnings: number;
+    bankName?: string;
+    accountNumber?: string;
+    accountName?: string;
+    createdAt: string;
+  }
+
+  interface ReferralStoreItem {
+    id: string;
+    referralCode: string;
+    ambassadorId: string;
+    studentMaskedId: string;
+    universityName: string;
+    status: 'CLICKED' | 'REGISTERED' | 'EMAIL_VERIFIED' | 'ONBOARDING' | 'QUALIFIED' | 'VALID' | 'REJECTED' | 'FRAUD_REVIEW';
+    stage: string;
+    conversionStatus: 'Pending' | 'Qualified' | 'Converted' | 'Rejected';
+    earningsAmount: number;
+    date: string;
+    lastActivity: string;
+  }
+
+  interface EarningStoreItem {
+    id: string;
+    ambassadorId: string;
+    referralId: string;
+    studentMaskedId: string;
+    amount: number;
+    status: 'Pending' | 'Qualified' | 'Approved' | 'Paid' | 'Rejected';
+    description: string;
+    createdAt: string;
+    approvedAt?: string;
+    paidAt?: string;
+  }
+
+  interface PayoutStoreItem {
+    id: string;
+    ambassadorId: string;
+    amount: number;
+    status: 'Pending' | 'Processing' | 'Approved' | 'Paid' | 'Rejected';
+    bankName: string;
+    accountNumber: string;
+    accountName: string;
+    requestedAt: string;
+    processedAt?: string;
+    referenceNumber?: string;
+    adminNotes?: string;
+  }
+
+  interface ResourceStoreItem {
+    id: string;
+    title: string;
+    category: 'Guide' | 'Social Copy' | 'Banner Graphic' | 'Campus Flyer' | 'Video Script' | 'FAQ';
+    description: string;
+    fileUrl?: string;
+    content?: string;
+    downloadCount: number;
+    format: string;
+    createdAt: string;
+  }
+
+  let ambassadorList: AmbassadorStoreItem[] = [];
+
+  let referralList: ReferralStoreItem[] = [];
+
+  let earningList: EarningStoreItem[] = [];
+
+  let payoutList: PayoutStoreItem[] = [];
+
+  let resourceList: ResourceStoreItem[] = [
+    {
+      id: "res_001",
+      title: "Official DORMIQA Campus Ambassador Toolkit 2026/2027",
+      category: "Guide",
+      description: "Comprehensive step-by-step onboarding guide, referral strategy, and rules of engagement for university ambassadors.",
+      content: "Welcome to the DORMIQA Ambassador Program! Use your unique link (e.g. https://dormiqa-ambassador.vercel.app/?ref=DORMIQA-001 or student portal link) to register students.",
+      downloadCount: 42,
+      format: "PDF Guide",
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: "res_002",
+      title: "Instagram & WhatsApp Status Story Graphics Pack",
+      category: "Banner Graphic",
+      description: "High-resolution 1080x1920 social graphics for UNILAG, UNIBEN, OAU, UI, FUTMinna, and Covenant students.",
+      fileUrl: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=80",
+      downloadCount: 88,
+      format: "PNG Bundle",
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: "res_003",
+      title: "WhatsApp Broadcast & Student Group Copy Templates",
+      category: "Social Copy",
+      description: "3 pre-written broadcast messages tailored for department group chats and hostel association groups.",
+      content: "📌 *Need a verified hostel near campus without agent scam?*\nCheck verified accommodations on DORMIQA! Click here: {YOUR_REFERRAL_LINK}",
+      downloadCount: 156,
+      format: "Text Copy",
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: "res_004",
+      title: "Printable Campus Gate Flyer & QR Code Template",
+      category: "Campus Flyer",
+      description: "Ready-to-print A5 flyers with custom QR code slot for campus gate distribution.",
+      fileUrl: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1200&q=80",
+      downloadCount: 31,
+      format: "PDF Printable",
+      createdAt: new Date().toISOString()
+    }
+  ];
+
+  // Helper to calculate ambassador performance metrics
+  function getAmbassadorMetrics(ambassadorId: string) {
+    const refs = referralList.filter(r => r.ambassadorId === ambassadorId);
+    const totalReferrals = refs.length;
+    const successfulReferrals = refs.filter(r => r.conversionStatus === 'Converted' || r.status === 'VALID' || r.status === 'QUALIFIED').length;
+    const pendingReferrals = refs.filter(r => r.status === 'CLICKED' || r.status === 'REGISTERED' || r.status === 'EMAIL_VERIFIED' || r.status === 'ONBOARDING').length;
+    const conversionRate = totalReferrals > 0 ? Math.round((successfulReferrals / totalReferrals) * 100) : 0;
+
+    const ambassadorEarnings = earningList.filter(e => e.ambassadorId === ambassadorId);
+    const totalEarnings = ambassadorEarnings.reduce((sum, e) => sum + e.amount, 0);
+    const pendingEarnings = ambassadorEarnings.filter(e => e.status === 'Pending' || e.status === 'Qualified').reduce((sum, e) => sum + e.amount, 0);
+    const paidEarnings = ambassadorEarnings.filter(e => e.status === 'Paid').reduce((sum, e) => sum + e.amount, 0);
+
+    return {
+      totalReferrals,
+      successfulReferrals,
+      pendingReferrals,
+      conversionRate,
+      totalEarnings,
+      pendingEarnings,
+      paidEarnings,
+    };
+  }
+
+  // 1. Get Ambassador Stats
+  app.get("/api/ambassador/stats", (req, res) => {
+    const ambassadorId = sanitizeInput(req.query.ambassadorId as string, 50);
+    if (!ambassadorId) {
+      return res.status(400).json({ error: "Ambassador ID is required" });
+    }
+
+    const metrics = getAmbassadorMetrics(ambassadorId);
+    const ambassador = ambassadorList.find(a => a.id === ambassadorId || a.ambassadorId === ambassadorId);
+
+    res.json({
+      ambassadorId: ambassador?.ambassadorId || ambassadorId,
+      status: ambassador?.ambassadorStatus || "Active",
+      metrics,
+      recentActivity: referralList
+        .filter(r => r.ambassadorId === ambassadorId)
+        .slice(0, 5)
+    });
+  });
+
+  // 2. Get Ambassador Referrals
+  app.get("/api/ambassador/referrals", (req, res) => {
+    const ambassadorId = sanitizeInput(req.query.ambassadorId as string, 50);
+    if (!ambassadorId) {
+      return res.status(400).json({ error: "Ambassador ID is required" });
+    }
+
+    const refs = referralList.filter(r => r.ambassadorId === ambassadorId);
+    res.json({ referrals: refs, total: refs.length });
+  });
+
+  // 3. Register Referral Click / Attribution
+  app.post("/api/referrals/click", mutationApiRateLimiter, (req, res) => {
+    const refCode = sanitizeInput(req.body.refCode, 30);
+    if (!refCode) {
+      return res.status(400).json({ error: "Referral code is required" });
+    }
+
+    const ambassador = ambassadorList.find(a => a.referralCode === refCode || a.ambassadorId === refCode);
+    if (!ambassador) {
+      return res.status(404).json({ error: "Invalid ambassador referral code" });
+    }
+
+    if (ambassador.ambassadorStatus === "Suspended") {
+      return res.status(403).json({ error: "Referral program inactive for this ambassador" });
+    }
+
+    const studentMaskedId = `STU-***${Math.floor(1000 + Math.random() * 9000)}`;
+    const newRef: ReferralStoreItem = {
+      id: `ref_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      referralCode: refCode,
+      ambassadorId: ambassador.id,
+      studentMaskedId,
+      universityName: ambassador.universityName || "UNILAG",
+      status: "CLICKED",
+      stage: "Referral Link Visited",
+      conversionStatus: "Pending",
+      earningsAmount: 0,
+      date: new Date().toISOString().split("T")[0],
+      lastActivity: new Date().toISOString()
+    };
+
+    referralList.unshift(newRef);
+    ambassador.totalReferrals += 1;
+    ambassador.pendingReferrals += 1;
+
+    res.json({ success: true, referralId: newRef.id, studentMaskedId });
+  });
+
+  // 4. Register Referred Student Onboarding Progress
+  app.post("/api/referrals/progress", mutationApiRateLimiter, (req, res) => {
+    const { referralId, status, stage } = req.body;
+    const cleanId = sanitizeInput(referralId, 50);
+    const cleanStatus = sanitizeInput(status, 30) as any;
+    const cleanStage = sanitizeInput(stage, 100);
+
+    const ref = referralList.find(r => r.id === cleanId);
+    if (!ref) {
+      return res.status(404).json({ error: "Referral record not found" });
+    }
+
+    ref.status = cleanStatus || ref.status;
+    ref.stage = cleanStage || ref.stage;
+    ref.lastActivity = new Date().toISOString();
+
+    res.json({ success: true, referral: ref });
+  });
+
+  // 5. Ambassador Earnings Ledger
+  app.get("/api/ambassador/earnings", (req, res) => {
+    const ambassadorId = sanitizeInput(req.query.ambassadorId as string, 50);
+    if (!ambassadorId) {
+      return res.status(400).json({ error: "Ambassador ID is required" });
+    }
+
+    const earnings = earningList.filter(e => e.ambassadorId === ambassadorId);
+    res.json({ earnings, total: earnings.length });
+  });
+
+  // 6. Ambassador Payout Requests & History
+  app.get("/api/ambassador/payouts", (req, res) => {
+    const ambassadorId = sanitizeInput(req.query.ambassadorId as string, 50);
+    if (!ambassadorId) {
+      return res.status(400).json({ error: "Ambassador ID is required" });
+    }
+
+    const payouts = payoutList.filter(p => p.ambassadorId === ambassadorId);
+    
+    // Calculate available balance
+    const metrics = getAmbassadorMetrics(ambassadorId);
+    const approvedEarningsSum = earningList
+      .filter(e => e.ambassadorId === ambassadorId && (e.status === 'Approved' || e.status === 'Qualified'))
+      .reduce((s, e) => s + e.amount, 0);
+    
+    const requestedPayoutsSum = payoutList
+      .filter(p => p.ambassadorId === ambassadorId && p.status !== 'Rejected')
+      .reduce((s, p) => s + p.amount, 0);
+
+    const availableBalance = Math.max(0, approvedEarningsSum - requestedPayoutsSum);
+
+    res.json({ payouts, availableBalance });
+  });
+
+  app.post("/api/ambassador/payouts", mutationApiRateLimiter, (req, res) => {
+    const ambassadorId = sanitizeInput(req.body.ambassadorId, 50);
+    const amount = Number(req.body.amount);
+    const bankName = sanitizeInput(req.body.bankName, 100);
+    const accountNumber = sanitizeInput(req.body.accountNumber, 30);
+    const accountName = sanitizeInput(req.body.accountName, 100);
+
+    if (!ambassadorId || isNaN(amount) || amount <= 0 || !bankName || !accountNumber) {
+      return res.status(400).json({ error: "Valid amount, bank name, and account number are required" });
+    }
+
+    const approvedEarningsSum = earningList
+      .filter(e => e.ambassadorId === ambassadorId && (e.status === 'Approved' || e.status === 'Qualified'))
+      .reduce((s, e) => s + e.amount, 0);
+    
+    const requestedPayoutsSum = payoutList
+      .filter(p => p.ambassadorId === ambassadorId && p.status !== 'Rejected')
+      .reduce((s, p) => s + p.amount, 0);
+
+    const availableBalance = Math.max(0, approvedEarningsSum - requestedPayoutsSum);
+
+    if (amount > availableBalance) {
+      return res.status(400).json({ 
+        error: `Requested amount (₦${amount.toLocaleString()}) exceeds your available balance (₦${availableBalance.toLocaleString()})` 
+      });
+    }
+
+    const newPayout: PayoutStoreItem = {
+      id: `payout_${Date.now()}`,
+      ambassadorId,
+      amount,
+      status: "Pending",
+      bankName,
+      accountNumber,
+      accountName: accountName || "Ambassador Account",
+      requestedAt: new Date().toISOString()
+    };
+
+    payoutList.unshift(newPayout);
+    res.status(201).json({ payout: newPayout, success: true });
+  });
+
+  // 7. Ambassador Marketing Resources
+  app.get("/api/ambassador/resources", (req, res) => {
+    res.json({ resources: resourceList });
+  });
+
+  // 8. ADMIN APIS FOR AMBASSADOR MANAGEMENT
+  app.get("/api/admin/ambassadors", (req, res) => {
+    const authHeader = req.headers.authorization;
+    const token = authHeader ? authHeader.replace("Bearer ", "") : (req.query.token as string);
+
+    if (!token || !adminSessions.has(token) || Date.now() > adminSessions.get(token)!.expiresAt) {
+      return res.status(401).json({ error: "Unauthorized admin access" });
+    }
+
+    res.json({ ambassadors: ambassadorList, total: ambassadorList.length });
+  });
+
+  app.patch("/api/admin/ambassadors/:id/status", mutationApiRateLimiter, (req, res) => {
+    const authHeader = req.headers.authorization;
+    const token = authHeader ? authHeader.replace("Bearer ", "") : req.body.token;
+
+    if (!token || !adminSessions.has(token) || Date.now() > adminSessions.get(token)!.expiresAt) {
+      return res.status(401).json({ error: "Unauthorized admin access" });
+    }
+
+    const cleanId = sanitizeInput(req.params.id, 50);
+    const newStatus = sanitizeInput(req.body.status, 20) as any;
+    if (!["Pending", "Active", "Suspended", "Inactive"].includes(newStatus)) {
+      return res.status(400).json({ error: "Invalid status value" });
+    }
+
+    const ambassador = ambassadorList.find(a => a.id === cleanId || a.ambassadorId === cleanId);
+    if (!ambassador) {
+      return res.status(404).json({ error: "Ambassador not found" });
+    }
+
+    ambassador.ambassadorStatus = newStatus;
+    res.json({ success: true, ambassador });
+  });
+
+  // Admin Referral Qualification & Earning Creation
+  app.post("/api/admin/referrals/qualify", mutationApiRateLimiter, (req, res) => {
+    const authHeader = req.headers.authorization;
+    const token = authHeader ? authHeader.replace("Bearer ", "") : req.body.token;
+
+    if (!token || !adminSessions.has(token) || Date.now() > adminSessions.get(token)!.expiresAt) {
+      return res.status(401).json({ error: "Unauthorized admin access" });
+    }
+
+    const referralId = sanitizeInput(req.body.referralId, 50);
+    const rewardAmount = Number(req.body.rewardAmount) || 2500;
+
+    const ref = referralList.find(r => r.id === referralId);
+    if (!ref) {
+      return res.status(404).json({ error: "Referral record not found" });
+    }
+
+    ref.status = "QUALIFIED";
+    ref.conversionStatus = "Converted";
+    ref.earningsAmount = rewardAmount;
+    ref.lastActivity = new Date().toISOString();
+
+    const earning: EarningStoreItem = {
+      id: `earn_${Date.now()}`,
+      ambassadorId: ref.ambassadorId,
+      referralId: ref.id,
+      studentMaskedId: ref.studentMaskedId,
+      amount: rewardAmount,
+      status: "Approved",
+      description: `Qualified student referral reward (${ref.universityName})`,
+      createdAt: new Date().toISOString(),
+      approvedAt: new Date().toISOString()
+    };
+
+    earningList.unshift(earning);
+
+    // Update ambassador totals
+    const ambassador = ambassadorList.find(a => a.id === ref.ambassadorId);
+    if (ambassador) {
+      ambassador.successfulReferrals += 1;
+      if (ambassador.pendingReferrals > 0) ambassador.pendingReferrals -= 1;
+      ambassador.totalEarnings += rewardAmount;
+    }
+
+    res.json({ success: true, referral: ref, earning });
+  });
+
+  // Admin Payout Approval & Processing
+  app.patch("/api/admin/payouts/:id/status", mutationApiRateLimiter, (req, res) => {
+    const authHeader = req.headers.authorization;
+    const token = authHeader ? authHeader.replace("Bearer ", "") : req.body.token;
+
+    if (!token || !adminSessions.has(token) || Date.now() > adminSessions.get(token)!.expiresAt) {
+      return res.status(401).json({ error: "Unauthorized admin access" });
+    }
+
+    const cleanId = sanitizeInput(req.params.id, 50);
+    const newStatus = sanitizeInput(req.body.status, 20) as any;
+    const adminNotes = sanitizeInput(req.body.adminNotes, 200);
+
+    const payout = payoutList.find(p => p.id === cleanId);
+    if (!payout) {
+      return res.status(404).json({ error: "Payout request not found" });
+    }
+
+    payout.status = newStatus;
+    payout.processedAt = new Date().toISOString();
+    if (adminNotes) payout.adminNotes = adminNotes;
+    payout.referenceNumber = `PAY-NG-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    if (newStatus === "Paid") {
+      const ambassador = ambassadorList.find(a => a.id === payout.ambassadorId);
+      if (ambassador) {
+        ambassador.paidEarnings += payout.amount;
+        if (ambassador.pendingEarnings >= payout.amount) {
+          ambassador.pendingEarnings -= payout.amount;
+        }
+      }
+    }
+
+    res.json({ success: true, payout });
+  });
   const adminLoginRateLimiter = createRateLimiter({
     windowMs: 15 * 60 * 1000,
     max: 5,
@@ -1239,7 +1678,7 @@ Office Address: ${officeAddress || 'Not provided'}`,
   app.post("/api/admin/login", adminLoginRateLimiter, (req, res) => {
     try {
       const { password } = req.body;
-      const expectedPassword = process.env.ADMIN_PASSWORD || "Dormiqa26/27";
+      const expectedPassword = process.env.ADMIN_PASSWORD || "Dormiqa_ambassador_9900234";
 
       if (!password || password !== expectedPassword) {
         return res.status(401).json({ 
